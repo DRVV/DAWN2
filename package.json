@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@react-sigma/core": "^4.0.2",
+    "graphology": "^0.25.4",
+    "graphology-types": "^0.24.7",
+    "sigma": "^3.0.0-beta.17"
+  }
+}
