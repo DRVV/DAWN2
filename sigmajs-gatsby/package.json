@@ -7,7 +7,7 @@
     "gatsby"
   ],
   "scripts": {
-    "develop": "gatsby develop",
+    "develop": "gatsby develop -H 0.0.0.0 -p 8181",
     "start": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
@@ -15,12 +15,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-sigma/core": "^4.0.3",
     "gatsby": "^5.13.3",
     "gatsby-plugin-image": "^3.13.1",
     "gatsby-plugin-sharp": "^5.13.1",
     "gatsby-source-filesystem": "^5.13.1",
+    "graphology": "^0.25.4",
+    "graphology-types": "^0.24.7",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "sigma": "^3.0.0-beta.26"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
