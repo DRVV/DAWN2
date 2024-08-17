@@ -1,4 +1,4 @@
-import * as React from 'react'
+import React from "react";
 import { useEffect } from "react";
 import Graph from "graphology";
 import { SigmaContainer, useLoadGraph } from "@react-sigma/core";

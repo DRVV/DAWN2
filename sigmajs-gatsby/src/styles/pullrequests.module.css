@@ -1,0 +1,106 @@
+.container {
+    width: 90%;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.tabs {
+    display: flex;
+}
+
+.tab {
+    margin-right: 20px;
+    padding: 10px 15px;
+    cursor: pointer;
+    color: #555;
+}
+
+.tab.active {
+    font-weight: bold;
+    color: #000;
+    border-bottom: 2px solid #000;
+}
+
+.filters {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-bar {
+    flex: 1;
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.new-pr-button {
+    padding: 10px 15px;
+    background-color: #2ea44f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pr-list {
+    border-top: 1px solid #ddd;
+    margin-top: 10px;
+}
+
+.pr-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.pr-item input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.pr-info {
+    flex: 1;
+}
+
+.pr-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #0366d6;
+    text-decoration: none;
+}
+
+.pr-title:hover {
+    text-decoration: underline;
+}
+
+.pr-meta {
+    color: #586069;
+    font-size: 12px;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    padding-left: 0;
+}
+
+.nav-link-item {
+    padding-right: 2rem;
+}
+.nav-link-text {
+    color: black;
+}
