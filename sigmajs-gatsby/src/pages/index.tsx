@@ -12,8 +12,9 @@ const IndexPage: React.FC<PageProps> = () => {
   const logId = "test_0000"
   const logIssuedDate = "2024/07/31"
   const userName = "testUser"
-  const updatedFile = "test file.gexf"
-  const logTitle = `Processed file: ${updatedFile}`
+  const updatedFile = "testfile.gexf"
+  const logTitle = `${updatedFile}`
+  const to_page = `/review?logTitle=${logTitle}`
 
   return (
     <Layout>
@@ -25,7 +26,7 @@ const IndexPage: React.FC<PageProps> = () => {
             <input type="checkbox" />
             <div className={prInfo}>
               
-              <Link className={prTitle} to="/review">{logTitle}</Link>
+              <Link className={prTitle} to={to_page}>{logTitle}</Link>
               <div className={prMeta}>
                 <span>#{logId} opened {logIssuedDate} by {userName}</span>
               </div>

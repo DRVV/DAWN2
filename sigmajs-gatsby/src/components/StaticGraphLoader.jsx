@@ -7,14 +7,16 @@ import random from 'graphology-layout/random'
 import { assign } from "sigma/utils";
 import { parse } from 'graphology-gexf/browser'
 
+import { graphRegion } from './StaticGraphLoader.module.css'
+
 const sigmaStyle = { height: "500px", width: "500px" };
 
 // Component that load the graph
-export const LoadGraph = () => {
+export const LoadGraph = ({path}) => {
     const loadGraph = useLoadGraph();
 
     useEffect(() => {
-        fetch('/graph/test.gexf')
+        fetch(path)
             .then(
                 response => response.text()
             ).then(
@@ -34,10 +36,12 @@ export const LoadGraph = () => {
 };
 
 // Component that display the graph
-export const DisplayGraph = () => {
+export const DisplayGraph = ({path}) => {
     return (
-        <SigmaContainer style={sigmaStyle}>
-            <LoadGraph />
+        <div className={graphRegion}>
+        <SigmaContainer style={sigmaStyle} >
+            <LoadGraph path={path}/>
         </SigmaContainer>
+        </div>
     );
 };
