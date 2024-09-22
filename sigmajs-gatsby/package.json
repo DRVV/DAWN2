@@ -20,6 +20,8 @@
     "gatsby-plugin-image": "^3.13.1",
     "gatsby-plugin-sharp": "^5.13.1",
     "gatsby-source-filesystem": "^5.13.1",
+    "gatsby-transformer-json": "^5.13.1",
+    "gatsby-transformer-sharp": "^5.13.1",
     "graphology": "^0.25.4",
     "graphology-gexf": "^0.13.1",
     "graphology-layout": "^0.6.1",
