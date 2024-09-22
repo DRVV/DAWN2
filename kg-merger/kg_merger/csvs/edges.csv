@@ -1,0 +1,5 @@
+Source,Target,Label,Provider,Ref
+uuid1___uuid3___uuid_a,uuid2___uuid5,EdgeAB,Provider1,Ref1
+uuid1___uuid3___uuid_a,uuid4___uuid6___uuid_c,EdgeAC___EdgeAC,Provider2___Provider_x,Ref2___Ref X
+uuid1___uuid3___uuid_a,uuid_d,EdgeAD,Provider_y,Ref Y
+uuid2___uuid5,uuid4___uuid6___uuid_c,EdgeBC___EdgeBC_Duplicate,Provider3___Provider3_Duplicate,Ref3___Ref3_Duplicate
