@@ -1,0 +1,8 @@
+digraph G1 {
+    // Nodes
+    uuid1 [label="NodeA"];
+    uuid2 [label="NodeB"];
+    
+    // Edges
+    uuid1 -> uuid2 [label="EdgeAB", provider="Provider1", ref="Ref1"];
+}

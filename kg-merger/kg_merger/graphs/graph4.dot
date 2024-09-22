@@ -1,0 +1,9 @@
+digraph G4 {
+    uuid_a [label="NodeA"];
+    uuid_c [label="NodeC"];
+    uuid_d [label="NodeD"];
+
+    uuid_a -> uuid_c [label="EdgeAC", provider="Provider_x", ref="Ref X"]
+    uuid_a -> uuid_d [label="EdgeAD", provider="Provider_y", ref="Ref Y"]
+    
+}

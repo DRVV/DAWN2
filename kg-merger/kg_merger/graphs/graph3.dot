@@ -1,0 +1,10 @@
+digraph G3 {
+    // Nodes
+    uuid5 [label="NodeB"]; // Same label as uuid2 in graph1.dot
+    uuid6 [label="NodeC"]; // Same label as uuid4 in graph2.dot
+    
+    // Edges
+    uuid5 -> uuid6 [label="EdgeBC", provider="Provider3", ref="Ref3"];
+    uuid5 -> uuid6 [label="EdgeBC_Duplicate", provider="Provider3_Duplicate", ref="Ref3_Duplicate"];
+}
+

@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "kg-merger"
+version = "0.1.0"
+description = ""
+authors = ["ns <n.shimode.drw@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+networkx = "^3.3"
+pytest = "^8.3.3"
+pydot = "^3.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

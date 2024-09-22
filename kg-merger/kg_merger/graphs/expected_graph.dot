@@ -1,0 +1,13 @@
+digraph MergedGraph {
+    // Nodes
+    uuid1___uuid3___uuid_a [label="NodeA"];
+    uuid2___uuid5 [label="NodeB"];
+    uuid4___uuid6___uuid_c [label="NodeC"];
+    uuid_d [label="NodeD"]; // graph4.dot
+    // Edges
+    uuid1___uuid3___uuid_a -> uuid2___uuid5 [label="EdgeAB", provider="Provider1", ref="Ref1"];
+    uuid1___uuid3___uuid_a -> uuid4___uuid6___uuid_c [label="EdgeAC___EdgeAC", provider="Provider2___Provider_x", ref="Ref2___Ref X"];
+    uuid2___uuid5 -> uuid4___uuid6___uuid_c [label="EdgeBC___EdgeBC_Duplicate", provider="Provider3___Provider3_Duplicate", ref="Ref3___Ref3_Duplicate"];
+    uuid1___uuid3___uuid_a -> uuid_d [label="EdgeAD", provider="Provider_y", ref="Ref Y"]    
+}
+
