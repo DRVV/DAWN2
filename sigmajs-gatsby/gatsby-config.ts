@@ -23,15 +23,15 @@ module.exports = {
       resolve: `gatsby-source-filesystem`,
       options: {
         name: `projects`,
-        path: `${__dirname}/static/content/projects`, // Path to your project JSON files,
+        path: `${__dirname}/static/content/project`, // Path to your project JSON files,
         
       },
     },
     {
       resolve: `gatsby-transformer-json`, // Transforms JSON files into nodes
-      options: {
-        typeName: `ProjectsJson`
-      }
+      // options: {
+      //   typeName: `ProjectJson`
+      // }
     },
     "gatsby-plugin-image",
     "gatsby-plugin-sharp",
