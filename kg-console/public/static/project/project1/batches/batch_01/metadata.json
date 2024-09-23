@@ -1,8 +1,13 @@
 {
-    "requestId": "project1__batch_01",
-    "isPublished": false,
-    "isReviewed": [true, false, false],
-    "reference": "./review.xlsx",
-    "graphPath": "./kg.png",
-    "batchId": "batch_01"
+  "requestId": "project1__batch_01",
+  "isPublished": true,
+  "isReviewed": [
+    true,
+    false,
+    false
+  ],
+  "reference": "./review.xlsx",
+  "graphPath": "./kg.png",
+  "batchId": "batch_01",
+  "commentMessage": "test commit from batch_01"
 }
