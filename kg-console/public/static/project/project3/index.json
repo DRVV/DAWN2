@@ -1,0 +1,23 @@
+{
+    "id": "project1",
+    "name": "Project1",
+    "description": "This is Project 1",
+    "date": "2024-08-04",
+    "graph_image": "./test01.png",
+    "batches": [
+      {
+        "id": "batch1",
+        "name": "Batch 1",
+        "status": "Processed",
+        "rawData": { "some": "raw data" },
+        "processedData": { "some": "processed data" }
+      },
+      {
+        "id": "batch2",
+        "name": "Batch 2",
+        "status": "Pending",
+        "rawData": { "some": "raw data" },
+        "processedData": null
+      }
+    ]
+  }
