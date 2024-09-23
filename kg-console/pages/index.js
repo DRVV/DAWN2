@@ -2,6 +2,8 @@
 import fs from 'fs';
 import path from 'path';
 import Link from 'next/link';
+import styles from '../styles/Home.module.css'; // Import the CSS module
+import Layout from '@/components/Layout';
 
 export async function getStaticProps() {
   const projectsDirectory = path.join(process.cwd(), 'public', 'static', 'project');
@@ -17,7 +19,7 @@ export async function getStaticProps() {
 
       batchFolders.forEach((batchFolder) => {
         const metadataPath = path.join(batchesDirectory, batchFolder, 'metadata.json');
-        let metadata = { title: batchFolder };
+        let metadata = { batchId: batchFolder };
 
         if (fs.existsSync(metadataPath)) {
           const metadataContent = fs.readFileSync(metadataPath, 'utf8');
@@ -40,25 +42,66 @@ export async function getStaticProps() {
 
 export default function HomePage({ batches }) {
   return (
-    <div>
-      <h1>All Batches</h1>
-      <ul>
-        {batches.map(({ projectId, batchId, metadata }) => (
-          <li key={`${projectId}-${batchId}`}>
-            <Link href={`/projects/${projectId}/batches/${batchId}`}>
-              {metadata.requestId || `${projectId} - ${batchId}`}
-            </Link>
-            {metadata.batchId}, 
-            
-            {metadata.isPublished},
-
-            {metadata.isReviewed},
-
-            {metadata.reference}
-
-          </li>
-        ))}
-      </ul>
+    <Layout>
+    <div className={styles.container}>
+      <h1>Knowledge Graph Management Console</h1>
+      <table className={styles.table}>
+        <thead>
+          <tr>
+            <th>Batch</th>
+            <th>Request ID</th>
+            <th>Published</th>
+            <th>Review Status</th>
+            <th>Reference</th>
+            <th>Graph</th>
+          </tr>
+        </thead>
+        <tbody>
+          {batches.map(({ projectId, batchId, metadata }) => (
+            <tr key={`${projectId}-${batchId}`}>
+              <td>
+                <Link href={`/projects/${projectId}/batches/${batchId}`} className={styles.link}>
+                  {metadata.batchId || `${projectId} - ${batchId}`}
+                </Link>
+              </td>
+              <td>{metadata.requestId}</td>
+              <td>{metadata.isPublished ? '✅' : '❌'}</td>
+              <td>
+                {metadata.isReviewed.map((reviewed, index) => (
+                  <span
+                    key={index}
+                    className={`${styles.reviewStatus} ${
+                      reviewed ? styles.approved : styles.pending
+                    }`}
+                  >
+                    {`Party ${index + 1}: `}
+                    {reviewed ? '✅' : '❌'}
+                  </span>
+                ))}
+              </td>
+              <td>
+                <a
+                  href={`/static/project/${projectId}/batches/${batchId}/${metadata.reference}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Download
+                </a>
+              </td>
+              <td>
+                <a
+                  href={`/static/project/${projectId}/batches/${batchId}/${metadata.graphPath}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Graph
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+    </Layout>
   );
 }
