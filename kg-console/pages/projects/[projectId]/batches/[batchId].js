@@ -247,9 +247,7 @@ export default function BatchPage({
   return (
     <Layout>
       <h1 className={styles.heading}>{metadata.title || `Batch: ${batchId}`}</h1>
-      <p className={styles.description}>
-        {metadata.description || 'No description available.'}
-      </p>
+      
 
       {/* Display Publish Status */}
       <p>
