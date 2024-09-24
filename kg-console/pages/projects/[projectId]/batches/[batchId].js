@@ -97,6 +97,17 @@ export default function BatchPage({
   const [selectedElement, setSelectedElement] = useState(null);
   const [editData, setEditData] = useState({});
 
+  // Add Node/Edge
+  const [isAddNodeMode, setIsAddNodeMode] = useState(false);
+
+  const [isAddEdgeMode, setIsAddEdgeMode] = useState(false);
+  const [edgeSourceNode, setEdgeSourceNode] = useState(null);
+
+  // Change to crosshair
+  const [cursorStyle, setCursorStyle] = useState('default');
+
+
+
   // Handle Publish button
   const handlePublish = async () => {
     if (confirm('Are you sure you want to publish this batch?')) {
@@ -187,6 +198,9 @@ export default function BatchPage({
     setEditData({ ...selectedElement.data });
   };
 
+
+  
+
   useEffect(() => {
     // Options for the network
     const options = {
@@ -194,14 +208,20 @@ export default function BatchPage({
         shape: 'dot',
         size: 15,
       },
-      edges: {
-        arrows: 'to',
-      },
+      // edges: {
+      //   arrows: 'to',
+      // },
       layout: {
         improvedLayout: true,
       },
       physics: {
-        enabled: true,
+        enabled: false,
+      },
+      
+      edges: {
+        arrows: {
+          to: { enabled: true },
+        },
       },
     };
 
@@ -223,31 +243,108 @@ export default function BatchPage({
 
       // Add event listeners
       kgCandidateNetwork.on('click', function (params) {
-        if (params.nodes.length > 0) {
-          // Node clicked
-          const nodeId = params.nodes[0];
-          const nodeData = kgCandidateDataState.nodes.find((n) => n.id === nodeId);
-          setSelectedElement({ type: 'node', data: nodeData });
-          setEditData({ ...nodeData });
-        } else if (params.edges.length > 0) {
-          // Edge clicked
-          const edgeId = params.edges[0];
-          const edgeData = kgCandidateDataState.edges.find((e) => e.id === edgeId);
-          setSelectedElement({ type: 'edge', data: edgeData });
-          setEditData({ ...edgeData });
-        } else {
-          // Clicked on empty space
-          setSelectedElement(null);
-          setEditData({});
+        // graph edit mode
+        if (isAddNodeMode && params.nodes.length === 0 && params.edges.length === 0) {
+          // Add node at this position
+          const position = params.pointer.canvas;
+          // Generate unique id
+          const newNodeId = 'node' + Date.now();
+          // Optionally prompt for node label
+          const nodeLabel = prompt('Enter label for the new node:', 'New Node');
+          const newNode = {
+            id: newNodeId,
+            label: nodeLabel || 'New Node',
+            x: position.x,
+            y: position.y,
+            // If you want to fix the node position
+            fixed: false,
+          };
+          // Update the nodes array
+          const updatedNodes = [...kgCandidateDataState.nodes, newNode];
+          const updatedData = { ...kgCandidateDataState, nodes: updatedNodes };
+          setKgCandidateDataState(updatedData);
+
+          // Re-render the network
+          kgCandidateNetworkInstanceRef.current.setData(updatedData);
+
+          // Exit add node mode
+          setIsAddNodeMode(false);
+          setCursorStyle('default');
+          
+        } else if (isAddEdgeMode) {
+          if (params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            if (!edgeSourceNode) {
+              // First node selected as source
+              setEdgeSourceNode(nodeId);
+              alert('Source node selected. Now select the target node.');
+            } else if (edgeSourceNode === nodeId) {
+              alert('Please select a different node as the target.');
+            } else {
+              // Second node selected as target
+              const edgeLabel = prompt('Enter label for the new edge:', 'New Edge');
+              const newEdgeId = 'edge' + Date.now();
+              const newEdge = {
+                id: newEdgeId,
+                from: edgeSourceNode,
+                to: nodeId,
+                label: edgeLabel || '',
+                arrows: 'to',
+              };
+              // Update the edges array
+              const updatedEdges = [...kgCandidateDataState.edges, newEdge];
+              const updatedData = { ...kgCandidateDataState, edges: updatedEdges };
+              setKgCandidateDataState(updatedData);
+
+              // Re-render the network
+              kgCandidateNetworkInstanceRef.current.setData(updatedData);
+
+              // Reset edge addition state
+              setIsAddEdgeMode(false);
+              setEdgeSourceNode(null);
+              setCursorStyle('default');
+
+              alert('Edge added.');
+            }
+          } else {
+            alert('Please select a node.');
+          }
+        }
+
+        else {
+          if (params.nodes.length > 0) {
+            // Node clicked
+            const nodeId = params.nodes[0];
+            const nodeData = kgCandidateDataState.nodes.find((n) => n.id === nodeId);
+            setSelectedElement({ type: 'node', data: nodeData });
+            setEditData({ ...nodeData });
+          } else if (params.edges.length > 0) {
+            // Edge clicked
+            const edgeId = params.edges[0];
+            const edgeData = kgCandidateDataState.edges.find((e) => e.id === edgeId);
+            setSelectedElement({ type: 'edge', data: edgeData });
+            setEditData({ ...edgeData });
+          } else {
+            // Clicked on empty space
+            setSelectedElement(null);
+            setEditData({});
+          }
         }
       });
     }
-  }, [kgData, kgCandidateDataState]);
+  }, [kgData, kgCandidateDataState, isAddNodeMode, isAddEdgeMode, edgeSourceNode]);
+
+  useEffect(() => {
+    if (kgCandidateNetworkInstanceRef.current) {
+      const container = kgCandidateNetworkInstanceRef.current.body.container;
+      container.style.cursor = cursorStyle;
+    }
+  }, [cursorStyle]);
 
   return (
     <Layout>
       <h1 className={styles.heading}>{metadata.title || `Batch: ${batchId}`}</h1>
-      
+
 
       {/* Display Publish Status */}
       <p>
@@ -283,6 +380,33 @@ export default function BatchPage({
 
       {/* Merge Candidate Graph Section */}
       <h2>Merge Candidate Graph</h2>
+      <div className={styles.buttonContainer}>
+        <button
+          className={`${styles.button} ${isAddNodeMode ? styles.activeButton : ''}`}
+          onClick={() => {
+            const newMode = !isAddNodeMode
+            setIsAddNodeMode(newMode);
+            setCursorStyle(newMode ? 'crosshair' : 'default');
+            setIsAddEdgeMode(false);
+          }
+          }
+        >
+          {isAddNodeMode ? 'Cancel Add Node' : 'Add Node'}
+        </button>
+        <button
+          className={`${styles.button} ${isAddEdgeMode ? styles.activeButton : ''}`}
+          onClick={() => {
+            const newMode = !isAddNodeMode
+            setIsAddEdgeMode(newMode);
+            setIsAddNodeMode(false); // Ensure only one mode is active
+            setEdgeSourceNode(null); // Reset source node selection
+            setCursorStyle(newMode ? 'pointer' : 'default');
+          }}
+        >
+          {isAddEdgeMode ? 'Cancel Add Edge' : 'Add Edge'}
+        </button>
+      </div>
+
       <div className={styles.graphSection}>
         <div ref={kgCandidateNetworkRef} className={styles.graphContainer}></div>
         <div className={styles.metadataPanel}>
