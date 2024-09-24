@@ -1,7 +1,13 @@
 {
-    "published": false,
+    "requestId": "project1__batch_01",
+    "isPublished": false,
+    "isReviewed": [
+      true,
+      false,
+      false
+    ],
+    "reference": "./review.xlsx",
     "graphPath": "./kg.png",
-    "batchId": "aaaa02",
-    "title": "hey! you! this is the copy",
-    "description": "hoehoge, copy"
-}
+    "batchId": "batch_01"
+    
+  }
