@@ -17,6 +17,10 @@ export default function Layout({ children }) {
         <Link href="/git-history" className={styles.navLink}>
           Version Control
         </Link>
+
+        <Link href="/merged-graph"className={styles.navLink}>
+          Merged Graph
+        </Link>
         {/* Add more navigation links if needed */}
         
       </nav>
