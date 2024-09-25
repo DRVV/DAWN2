@@ -1,0 +1,13 @@
+/* styles/MergedGraph.module.css */
+
+.heading {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .graphContainer {
+    height: 600px;
+    border: 1px solid #ccc;
+    margin: 0 auto;
+  }
+  

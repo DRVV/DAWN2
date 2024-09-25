@@ -1,0 +1,33 @@
+/* components/Layout.module.css */
+
+/* Container Styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+/* Navbar Styles */
+.navbar {
+  display: flex;
+  background-color: #f5f5f5;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.navLink {
+  margin-right: 15px;
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  text-decoration: underline;
+}
+
+/* Main Content Styles */
+
+.main {
+  min-height: 100vh;
+}
