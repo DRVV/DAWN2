@@ -13,6 +13,8 @@ pydot = "^3.0.1"
 neo4j = "^5.25.0"
 python-dotenv = "^1.0.1"
 streamlit = "^1.38.0"
+matplotlib = "^3.9.2"
+streamlit-agraph = "^0.0.45"
 
 
 [build-system]
