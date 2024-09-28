@@ -6,7 +6,8 @@ from pathlib import Path
 graphdir = Path('graphs')
 csv_dir = Path('csvs')
 csv_dir.mkdir(exist_ok=True)  # Ensure the csv_dir exists
-dot_file = graphdir / 'expected_graph.dot'
+# dot_file = graphdir / 'expected_graph.dot'
+dot_file = graphdir / 'graph.dot'
 
 # Read the DOT file into a NetworkX graph
 G = nx.drawing.nx_pydot.read_dot(dot_file)
@@ -19,8 +20,8 @@ def clean_data(value):
     return value
 
 # Paths for the output CSV files
-nodes_csv = csv_dir / 'nodes.csv'
-edges_csv = csv_dir / 'edges.csv'
+nodes_csv = csv_dir / 'nodes_csvwriter.csv'
+edges_csv = csv_dir / 'edges_csvwriter.csv'
 
 # Write nodes to 'nodes.csv'
 with nodes_csv.open('w', newline='', encoding='utf-8') as node_file:

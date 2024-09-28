@@ -1,0 +1,6 @@
+source,target,label,product,provider
+A,B,label1___label2,a___b,provider1___provider2
+A,C,label3,c,provider3
+B,D,label2___label4,b___d,provider2___provider4
+C,D,label3___label5,c___d,provider3___provider5
+D,E,label6,e,provider6
