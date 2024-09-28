@@ -11,13 +11,13 @@ logging.basicConfig(level=logging.INFO)
 def query_subgraph(user_criteria, neo4j_uri, neo4j_user, neo4j_password):
     """
     Queries Neo4j to retrieve a subgraph based on user criteria and returns it as a networkx.DiGraph.
-    
+
     Parameters:
         user_criteria (dict): Dictionary where keys are attribute names and values are lists of acceptable values.
         neo4j_uri (str): URI for the Neo4j database.
         neo4j_user (str): Username for Neo4j authentication.
         neo4j_password (str): Password for Neo4j authentication.
-    
+
     Returns:
         networkx.DiGraph: A directed graph representing the subgraph from Neo4j.
     """
@@ -43,9 +43,12 @@ def query_subgraph(user_criteria, neo4j_uri, neo4j_user, neo4j_password):
             query = f"""
                 MATCH (a:Node)-[r:RELATED]->(b:Node)
                 WHERE {where_statement}
-                RETURN DISTINCT a.id AS from_id, a.label AS from_label,
-                                b.id AS to_id, b.label AS to_label,
-                                {return_attributes}
+                RETURN DISTINCT 
+                    a.id AS from_id, 
+                    a.label AS from_label,
+                    b.id AS to_id, 
+                    b.label AS to_label,
+                    {return_attributes}
             """
 
             # Execute the query with parameters
@@ -102,22 +105,42 @@ def networkx_to_streamlit_agraph(G: nx.DiGraph):
         node = Node(
             id=str(node_id),
             label=data.get('label', str(node_id)),
-            size=20,  # Customize as needed
-            color='lightblue',  # Customize as needed
+            size=20,  # Customize node size as needed
+            color='lightblue',  # Customize node color as needed
+            # Additional attributes can be added here
         )
         nodes.append(node)
 
     # Transform edges
     edges = []
     for source, target, data in G.edges(data=True):
-        # Create a label for the edge based on its attributes (optional)
-        label = ", ".join([f"{k}: {v}" for k, v in data.items()]) if data else ""
-        
+        # Extract the 'label' attribute for the edge label
+        edge_label = data.get('label', '')
+        if isinstance(edge_label, list):
+            edge_label = ', '.join(edge_label)  # Convert list to string
+
+        # Extract other attributes to display on hover
+        other_attrs = {k: v for k, v in data.items() if k != 'label'}
+        if other_attrs:
+            # Convert all other attribute values to strings, joining lists if necessary
+            tooltip_parts = []
+            for k, v in other_attrs.items():
+                if isinstance(v, list):
+                    v_str = ', '.join(map(str, v))
+                else:
+                    v_str = str(v)
+                tooltip_parts.append(f"{k}: {v_str}")
+            tooltip = "; \n".join(tooltip_parts)
+        else:
+            tooltip = ""
+
         edge = Edge(
             source=str(source),
             target=str(target),
-            label=label,
-            color='gray',  # Customize as needed
+            label=edge_label,
+            title=tooltip,  # This attribute is used for tooltips
+            color='gray',  # Customize edge color as needed
+            # Additional attributes like arrows, dashes, etc., can be added here
         )
         edges.append(edge)
 
@@ -145,30 +168,33 @@ def visualize_subgraph():
 
     if st.sidebar.button("Query Subgraph"):
         with st.spinner("Querying Neo4j and generating graph..."):
-            # Query the subgraph
-            G = query_subgraph(user_criteria, neo4j_uri, neo4j_user, neo4j_password)
+            try:
+                # Query the subgraph
+                G = query_subgraph(user_criteria, neo4j_uri, neo4j_user, neo4j_password)
 
-            # Transform to streamlit_agraph format
-            nodes, edges = networkx_to_streamlit_agraph(G)
+                # Transform to streamlit_agraph format
+                nodes, edges = networkx_to_streamlit_agraph(G)
 
-            # Define the configuration for the graph visualization
-            config = Config(
-                width=800,
-                height=600,
-                directed=True,
-                nodeHighlightBehavior=True,
-                node={"color": "lightblue", "size": 20},
-                link={"color": "gray"},
-                physics=True  # Enable physics for interactive layout
-            )
+                # Define the configuration for the graph visualization
+                config = Config(
+                    width=800,
+                    height=600,
+                    directed=True,
+                    nodeHighlightBehavior=True,
+                    node={"color": "lightblue", "size": 20},
+                    link={"color": "gray"},
+                    physics=True  # Enable physics for interactive layout
+                )
 
-            # Render the graph
-            agraph(
-                nodes=nodes,
-                edges=edges,
-                config=config
-            )
-        st.success("Subgraph visualization complete!")
+                # Render the graph
+                agraph(
+                    nodes=nodes,
+                    edges=edges,
+                    config=config
+                )
+                st.success("Subgraph visualization complete!")
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     st.set_page_config(page_title="Graph Database Visualization", layout="wide")
