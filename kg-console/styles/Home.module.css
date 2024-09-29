@@ -1,65 +1,71 @@
 /* styles/Home.module.css */
 
-/* Container Styles */
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-  }
-  
-  /* Heading Style */
-  .heading {
-    text-align: center;
-    margin-bottom: 40px;
-    color: #333;
-  }
-  
-  /* Table Styles */
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 40px;
-  }
-  
-  .table th,
-  .table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .table th {
-    background-color: #f5f5f5;
-    color: #555;
-    font-weight: 600;
-  }
-  
-  .table tr:hover {
-    background-color: #fafafa;
-  }
-  
-  /* Link Styles */
-  .link {
-    color: #0070f3;
-    text-decoration: none;
-  }
-  
-  .link:hover {
-    text-decoration: underline;
-  }
-  
-  /* Review Status Styles */
-  .reviewStatus {
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  .approved {
-    color: green;
-  }
-  
-  .pending {
-    color: red;
-  }
-  
+  padding: 20px;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.filterContainer {
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.filterContainer label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+}
+
+.filterInput {
+  padding: 5px;
+  font-size: 14px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  word-wrap: break-word;
+}
+
+.table th {
+  background-color: #f2f2f2;
+  text-align: left;
+}
+
+.link {
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.reviewStatus {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.approved {
+  color: green;
+}
+
+.pending {
+  color: red;
+}
