@@ -455,6 +455,17 @@ files = [
 six = "*"
 
 [[package]]
+name = "janome"
+version = "0.5.0"
+description = "Japanese morphological analysis engine."
+optional = false
+python-versions = "*"
+files = [
+    {file = "Janome-0.5.0-py2.py3-none-any.whl", hash = "sha256:d098670394a77881ce2f6b7d696c0ea5ff74c0c8cf74a8a882159ec82c0e6dc7"},
+    {file = "Janome-0.5.0.tar.gz", hash = "sha256:ce4a3ed7a4635c2f80139639327d5b1e0381858ad74a3c4a61e8cc83f820400e"},
+]
+
+[[package]]
 name = "jinja2"
 version = "3.1.4"
 description = "A very fast and expressive template engine."
@@ -1727,4 +1738,4 @@ watchmedo = ["PyYAML (>=3.10)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a0c14d31ec46769759f5d73f1c8a8403642d3a4b2aa44852309de1f22d9bc370"
+content-hash = "7aaadcce773a6c0c442ebf7ae4f9be428875a071ebb231e1b52bc4e7051b7ad4"
