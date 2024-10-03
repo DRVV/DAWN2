@@ -42,7 +42,7 @@
 
 .panel {
   width: 300px;
-  max-height: 400px;
+  /* max-height: 400px; */
   padding: 20px;
   background-color: #ffffff;
   border: 1px solid #ddd;

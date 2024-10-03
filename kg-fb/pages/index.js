@@ -58,28 +58,8 @@ export default function Home() {
         <p className={styles.description}>
           Click on nodes or edges to provide your feedback.
         </p>
-        <div className={styles.userDetails}>
-        <div className={styles.inputGroup}>
-          <label className={styles.inputLabel}>Your Name:</label>
-          <input
-            type="text"
-            className={styles.inputField}
-            placeholder="Enter your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div className={styles.inputGroup}>
-          <label className={styles.inputLabel}>Your Affiliate:</label>
-          <input
-            type="text"
-            className={styles.inputField}
-            placeholder="Enter your affiliate"
-            value={affiliate}
-            onChange={(e) => setAffiliate(e.target.value)}
-          />
-        </div>
-      </div>
+        
+      
       </header>
 
       <div className={styles.graphSection}>
