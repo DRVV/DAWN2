@@ -1,8 +1,0 @@
-digraph G {
-    n1 [label="hello!"];
-    n2 [label="world!"];
-    n3 [label="piyopiyo"]
-
-    n1 -> n2 [label="relates to"];
-    n1 -> n3 [label="new edge!"];
-}

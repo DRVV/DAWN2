@@ -1,8 +1,0 @@
-{
-    "requestId": "project1__batch_02",
-    "isPublished": false,
-    "isReviewed": [true, false, false],
-    "reference": "./review.xlsx",
-    "graphPath": "./kg.png",
-    "batchId": "batch_02"
-}
