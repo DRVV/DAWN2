@@ -50,6 +50,14 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
+        {/* Header Section */}
+           <header className={styles.header}>
+        <h1 className={styles.title}>Knowledge Graph Feedback</h1>
+        <p className={styles.description}>
+          Click on nodes or edges to provide your feedback.
+        </p>
+      </header>
+
       <div className={styles.graphSection}>
         {graphData ? (
           <GraphComponent

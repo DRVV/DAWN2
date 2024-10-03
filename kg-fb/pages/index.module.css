@@ -3,9 +3,29 @@
 .container {
   position: relative; /* Positioning context for absolute children */
   display: flex;
-  flex-direction: row; /* Align children horizontally */
+  flex-direction: column; /* Stack children vertically */
   height: 100vh; /* Full viewport height */
   background-color: #eef2f5;
+}
+
+.header {
+  /* text-align: center; Center-align text */
+  padding: 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-size: 2em;
+  margin: 0;
+  color: #0070f3;
+}
+
+.description {
+  font-size: 1em;
+  color: #555555;
+  margin-top: 10px;
 }
 
 .graphSection {
@@ -22,5 +42,13 @@
 
   .graphSection {
     height: 70vh; /* Adjust as needed for mobile */
+  }
+
+  .title {
+    font-size: 1.5em;
+  }
+
+  .description {
+    font-size: 0.9em;
   }
 }
