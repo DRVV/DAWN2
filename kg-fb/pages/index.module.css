@@ -3,18 +3,24 @@
 .container {
   position: relative; /* Ensures absolute children are positioned relative to this container */
   display: flex;
-  height: 100vh;
+  flex-direction: row; /* Align children horizontally */
+  height: 100vh; /* Full viewport height */
   background-color: #eef2f5;
 }
 
 .graphSection {
-  flex: 1;
+  flex: 1; /* Takes up remaining space */
   padding: 20px;
   position: relative;
+  height: 100%; /* Ensures it fills the container's height */
 }
 
 @media (max-width: 768px) {
   .container {
-    flex-direction: column;
+    flex-direction: column; /* Stack vertically on smaller screens */
+  }
+
+  .graphSection {
+    height: 70vh; /* Adjust as needed for mobile */
   }
 }

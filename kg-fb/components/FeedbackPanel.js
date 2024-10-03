@@ -48,7 +48,7 @@ export default function FeedbackPanel({ element, onClose, position }) {
       elementId: element.id,
       rating: feedback.rating,
       comments: feedback.comments,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
 
     try {

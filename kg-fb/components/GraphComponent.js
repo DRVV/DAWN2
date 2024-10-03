@@ -10,12 +10,25 @@ export default function GraphComponent({ graphData, onElementClick }) {
   useEffect(() => {
     if (visJsRef.current && graphData) {
       const network = new Network(visJsRef.current, graphData, {
+
+        layout: {
+          hierarchical: {
+            enabled: true,
+            direction: 'UD', // UD, DU, LR, RL
+            sortMethod: 'directed', // hubsize, directed
+            nodeSpacing: 200,
+            treeSpacing: 300,
+            blockShifting: true,
+            edgeMinimization: true,
+            parentCentralization: true,
+          },
+        },
         nodes: {
-          shape: 'dot',
+          shape: 'box',
           size: 16,
           font: {
             size: 14,
-            color: '#ffffff',
+            // color: '#ffffff',
           },
           borderWidth: 2,
         },
