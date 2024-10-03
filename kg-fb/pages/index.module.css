@@ -1,0 +1,20 @@
+/* pages/index.module.css */
+
+.container {
+  position: relative; /* Ensures absolute children are positioned relative to this container */
+  display: flex;
+  height: 100vh;
+  background-color: #eef2f5;
+}
+
+.graphSection {
+  flex: 1;
+  padding: 20px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+}
