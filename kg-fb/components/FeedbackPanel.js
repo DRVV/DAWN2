@@ -1,24 +1,57 @@
 // components/FeedbackPanel.js
+
 import { useState, useEffect, useRef } from 'react';
 import styles from './FeedbackPanel.module.css';
 
-export default function FeedbackPanel({ element, onClose, position }) {
+export default function FeedbackPanel({ element, onClose }) {
   const [feedback, setFeedback] = useState({ rating: '', comments: '' });
+  const [panelStyle, setPanelStyle] = useState({});
   const [visible, setVisible] = useState(false);
   const panelRef = useRef(null);
 
   useEffect(() => {
-    // Trigger the visibility for transition after mounting
-    setTimeout(() => {
-      setVisible(true);
-    }, 10);
-  }, []);
+    if (element && element.position) {
+      const panelWidth = 300; // Must match the CSS width
+      const panelHeight = 400; // Must match the CSS max-height
+
+      let top = element.position.y + 10;
+      let left = element.position.x + 10;
+
+      // Get viewport dimensions
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Adjust if panel exceeds viewport width
+      if (left + panelWidth > viewportWidth) {
+        left = viewportWidth - panelWidth - 20; // 20px padding
+      }
+
+      // Adjust if panel exceeds viewport height
+      if (top + panelHeight > viewportHeight) {
+        top = viewportHeight - panelHeight - 20; // 20px padding
+      }
+
+      setPanelStyle({
+        top: top,
+        left: left,
+      });
+
+      // Trigger the visibility for transition
+      // Delay to allow the panel to be positioned before making it visible
+      setTimeout(() => {
+        setVisible(true);
+      }, 10);
+    }
+  }, [element]);
 
   // Close panel when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (panelRef.current && !panelRef.current.contains(event.target)) {
-        handleClose();
+        setVisible(false);
+        setTimeout(() => {
+          onClose();
+        }, 300); // Match the transition duration
       }
     };
 
@@ -26,14 +59,7 @@ export default function FeedbackPanel({ element, onClose, position }) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
-
-  const handleClose = () => {
-    setVisible(false);
-    setTimeout(() => {
-      onClose();
-    }, 300); // Match the transition duration
-  };
+  }, [onClose]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,7 +74,7 @@ export default function FeedbackPanel({ element, onClose, position }) {
       elementId: element.id,
       rating: feedback.rating,
       comments: feedback.comments,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     try {
@@ -61,7 +87,10 @@ export default function FeedbackPanel({ element, onClose, position }) {
       if (response.ok) {
         alert('Feedback submitted successfully.');
         setFeedback({ rating: '', comments: '' });
-        handleClose();
+        setVisible(false);
+        setTimeout(() => {
+          onClose();
+        }, 300);
       } else {
         alert('Failed to submit feedback.');
       }
@@ -71,25 +100,30 @@ export default function FeedbackPanel({ element, onClose, position }) {
     }
   };
 
-  // Calculate position styles from props
-  const panelStyle = {
-    position: 'absolute',
-    top: position.top,
-    left: position.left,
-    zIndex: 1000,
-  };
+  if (!element) return null;
 
   return (
     <div
       className={`${styles.panel} ${visible ? styles.panelVisible : ''}`}
       style={panelStyle}
       ref={panelRef}
+      role="dialog"
+      aria-labelledby="feedback-title"
     >
       <div className={styles.header}>
         <span className={styles.title}>
           Feedback for {element.type} {element.id}
         </span>
-        <button className={styles.closeButton} onClick={handleClose}>
+        <button
+          className={styles.closeButton}
+          onClick={() => {
+            setVisible(false);
+            setTimeout(() => {
+              onClose();
+            }, 300);
+          }}
+          aria-label="Close Feedback Panel"
+        >
           &times;
         </button>
       </div>

@@ -1,7 +1,7 @@
 /* pages/index.module.css */
 
 .container {
-  position: relative; /* Ensures absolute children are positioned relative to this container */
+  position: relative; /* Positioning context for absolute children */
   display: flex;
   flex-direction: row; /* Align children horizontally */
   height: 100vh; /* Full viewport height */
