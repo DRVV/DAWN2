@@ -1,4 +1,0 @@
-digraph G{
-  n -> m [label="asdf"];
-  r -> m [label="kdfs"];
-} 

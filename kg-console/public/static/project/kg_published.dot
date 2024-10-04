@@ -1,7 +1,0 @@
-strict digraph {
-  n1 [id=n1,label="hello!"]
-  n2 [id=n2,label="world!"]
-  n3 [id=n3,label=piyopiyo]
-  n1 -> n2 [id=edge0,from=n1,to=n2,label="relates to baaaaaaaaaaaaaaa"]
-  n1 -> n3 [id=edge1,from=n1,to=n3,label="new edge!"]
-}

@@ -1,4 +1,0 @@
-digraph {
-  n -> m [label="asdf"];
-  r -> m [label="kdfs"];
-}

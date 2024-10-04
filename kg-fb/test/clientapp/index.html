@@ -1,0 +1,42 @@
+<!-- client-app/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Graph Sender</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f2f5;
+    }
+    .container {
+      text-align: center;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 1em;
+      color: #ffffff;
+      background-color: #0070f3;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005bb5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Send Graph Data to Feedback App</h1>
+    <button id="sendGraphButton">Send Graph Data</button>
+  </div>
+
+  <script src="sendGraph.js"></script>
+</body>
+</html>
