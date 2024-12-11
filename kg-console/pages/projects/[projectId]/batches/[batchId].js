@@ -3,7 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import { read } from 'graphlib-dot';
-import { graphlibToVis } from '../../../../utils/graphlibToVis'; // Adjust the import path
+import { graphlibToVis } from '../../../../utils/graphlibToVis';
 import Layout from '../../../../components/Layout';
 import styles from '../../../../styles/Batch.module.css';
 import Link from 'next/link';
@@ -11,6 +11,55 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Network } from 'vis-network';
 import axios from 'axios';
 import { DataSet } from 'vis-data';
+
+function Notification({ message, onClose }) {
+  if (!message) return null;
+  return (
+    <div className={styles.notification}>
+      {message}
+      <button onClick={onClose}>x</button>
+    </div>
+  );
+}
+
+function InstructionOverlay({ mode }) {
+  if (!mode) return null;
+  const instructions =
+    mode === 'addNode'
+      ? "Click anywhere on the canvas to add a node. Then fill out its details in the side panel."
+      : "Select a source node, then select the target node to add an edge. Finally, fill out details in the side panel.";
+  return <div className={styles.instructionOverlay}>{instructions}</div>;
+}
+
+function AddElementModal({ type, open, onClose, onSubmit }) {
+  const [label, setLabel] = useState('');
+
+  useEffect(() => {
+    if (!open) setLabel('');
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <h3>{type === 'node' ? 'Add Node' : 'Add Edge'}</h3>
+        <label>
+          Label:
+          <input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder={`Enter label for ${type}`}
+          />
+        </label>
+        <div className={styles.modalActions}>
+          <button onClick={() => onSubmit(label)}>Add</button>
+          <button onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export async function getStaticPaths() {
   const projectsDirectory = path.join(process.cwd(), 'public', 'static', 'project');
@@ -53,32 +102,19 @@ export async function getStaticProps({ params }) {
   const kgDotPath = path.join(batchDirectory, 'kg.dot');
   const kgCandidateDotPath = path.join(batchDirectory, 'kg_candidate.dot');
 
-  // Read metadata
   const metadataContent = fs.readFileSync(metadataPath, 'utf8');
   const metadata = JSON.parse(metadataContent);
 
-  // Read .dot files
   const kgDotContent = fs.readFileSync(kgDotPath, 'utf8');
+  const kgGraph = read(kgDotContent);
+  const kgData = graphlibToVis(kgGraph);
 
-  let kgCandidateData = null; // Initialize as null
-
-  // **Check if kg_candidate.dot exists**
+  let kgCandidateData = null;
   if (fs.existsSync(kgCandidateDotPath)) {
-    // Read and process kg_candidate.dot
     const kgCandidateDotContent = fs.readFileSync(kgCandidateDotPath, 'utf8');
     const kgCandidateGraph = read(kgCandidateDotContent);
     kgCandidateData = graphlibToVis(kgCandidateGraph);
   }
-
-  // const kgCandidateDotContent = fs.readFileSync(kgCandidateDotPath, 'utf8');
-
-  // Parse .dot files into graphlib graphs
-  const kgGraph = read(kgDotContent);
-  // const kgCandidateGraph = read(kgCandidateDotContent);
-
-  // Convert graphlib graphs to vis.js format
-  const kgData = graphlibToVis(kgGraph);
-  //const kgCandidateData = graphlibToVis(kgCandidateGraph);
 
   return {
     props: {
@@ -99,13 +135,10 @@ export default function BatchPage({
   kgCandidateData,
 }) {
   const [isPublished, setIsPublished] = useState(metadata.isPublished);
-  // const [kgCandidateDataState, setKgCandidateDataState] = useState(kgCandidateData);
   const [commentMessage, setCommentMessage] = useState(metadata.commentMessage || '');
 
   const kgNetworkRef = useRef(null);
-  // Network instances
-  const kgNetworkInstanceRef = useRef(null); // Ref to store the Current Graph network instance
-  //const kgCandidateNetworkInstanceRef = useRef(null); // Ref to store the Candidate Graph network instance
+  const kgNetworkInstanceRef = useRef(null);
 
   const kgCandidateNetworkRef = useRef(null);
   const kgCandidateNetworkInstanceRef = useRef(null);
@@ -113,30 +146,23 @@ export default function BatchPage({
   const [selectedElement, setSelectedElement] = useState(null);
   const [editData, setEditData] = useState({});
 
-  // Add Node/Edge
   const [isAddNodeMode, setIsAddNodeMode] = useState(false);
-
   const [isAddEdgeMode, setIsAddEdgeMode] = useState(false);
   const [edgeSourceNode, setEdgeSourceNode] = useState(null);
 
-  // Change to crosshair
   const [cursorStyle, setCursorStyle] = useState('default');
-
-  // generating merge candidate
   const [isGenerating, setIsGenerating] = useState(false);
+  const [notification, setNotification] = useState('');
 
-
-
-
-  // node state
+  const [addElementModalOpen, setAddElementModalOpen] = useState(false);
+  const [addingElementType, setAddingElementType] = useState(null); // 'node' or 'edge'
+  const [pendingElement, setPendingElement] = useState(null);
 
   const [kgCandidateDataState, setKgCandidateDataState] = useState(() => {
-    // Initialize nodes with movable positions
+    if (!kgCandidateData) return null;
     const initialNodes = kgCandidateData.nodes.map((node) => ({
       ...node,
-      fixed: { x: false, y: false }, // Allow nodes to be dragged
-      //x: node.x !== undefined ? node.x : 0, // Provide default x if undefined
-      //y: node.y !== undefined ? node.y : 0, // Provide default y if undefined
+      fixed: { x: false, y: false },
     }));
     return {
       ...kgCandidateData,
@@ -144,27 +170,23 @@ export default function BatchPage({
     };
   });
 
+  const nodes = useRef(new DataSet(kgCandidateDataState ? kgCandidateDataState.nodes : []));
+  const edges = useRef(new DataSet(kgCandidateDataState ? kgCandidateDataState.edges : []));
 
-  
-  // direct access to nodes and edges
-  const nodes = useRef(new DataSet(kgCandidateDataState.nodes));
-  const edges = useRef(new DataSet(kgCandidateDataState.edges));
-
-
-
+  const showNotification = (msg) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(''), 3000);
+  };
 
   const handleGenerateCandidateGraph = async () => {
     try {
-      setIsGenerating(true); // Optional: Show a loading indicator
+      setIsGenerating(true);
       const response = await axios.post('/api/generateCandidateGraph', {
         projectId,
         batchId,
       });
 
-      console.log(`response success? ${response.data.success}`)
-
       if (response.data.success) {
-        // Fetch the updated graph data
         const graphResponse = await axios.get('/api/getGraphData', {
           params: { projectId, batchId },
           headers: {
@@ -172,112 +194,76 @@ export default function BatchPage({
           },
         });
 
-        console.log('getGraphData response:', graphResponse);
-
         if (graphResponse.data.success) {
-          // Update the state with the new graph data
           const newKgCandidateData = graphResponse.data.kgCandidateData;
           if (newKgCandidateData) {
             setKgCandidateDataState(newKgCandidateData);
-            // Re-render the network
-            // if (kgCandidateNetworkInstanceRef.current) {
-            //   kgCandidateNetworkInstanceRef.current.setData(newKgCandidateData);
-            // } else {
-            //   // Initialize the network if it doesn't exist
-            //   const options = {
-            //     nodes: {
-            //       shape: 'dot',
-            //       size: 15,
-            //     },
-            //     edges: {
-            //       arrows: 'to',
-            //     },
-            //     layout: {
-            //       improvedLayout: true,
-            //     },
-            //     physics: {
-            //       enabled: true,
-            //     },
-            //   };
-
-            //   const kgCandidateNetwork = new Network(
-            //     kgCandidateNetworkRef.current,
-            //     newKgCandidateData,
-            //     options
-            //   );
-            //   kgCandidateNetworkInstanceRef.current = kgCandidateNetwork;
-
-            //   // Add event listeners as before
-            //   kgCandidateNetwork.on('click', handleNetworkClick);
-            // }
-
-            // alert('Candidate graph generated successfully.');
+            nodes.current = new DataSet(newKgCandidateData.nodes);
+            edges.current = new DataSet(newKgCandidateData.edges);
+            if (kgCandidateNetworkInstanceRef.current) {
+              kgCandidateNetworkInstanceRef.current.setData({
+                nodes: nodes.current,
+                edges: edges.current,
+              });
+            }
+            showNotification('Candidate graph generated successfully.');
           } else {
-            alert('Failed to fetch the updated candidate graph: No data received.');
+            showNotification('No data received for the updated candidate graph.');
           }
         } else {
-          alert(`Failed to fetch the updated candidate graph: ${graphResponse.data.error}`);
+          showNotification(`Failed to fetch updated candidate graph: ${graphResponse.data.error}`);
         }
       } else {
-        alert(`Failed to generate candidate graph: ${response.data.error}`);
+        showNotification(`Failed to generate candidate graph: ${response.data.error}`);
       }
 
     } catch (error) {
       console.error('Error generating candidate graph:', error);
-      alert('Failed to generate candidate graph.');
+      showNotification('Failed to generate candidate graph.');
     } finally {
-      setIsGenerating(false); // Hide the loading indicator
+      setIsGenerating(false);
     }
   };
 
-  // Handle Publish button
   const handlePublish = async () => {
-    if (confirm('Are you sure you want to publish this batch?')) {
+    if (window.confirm('Are you sure you want to publish this batch?')) {
       try {
         const response = await axios.post('/api/publishBatch', {
           projectId,
           batchId,
-          kgCandidateDataState, // Send the current graph data
-          commentMessage,       // Send the comment
+          kgCandidateDataState,
+          commentMessage,
         });
 
-        alert(response.data.message);
-
-        // Update local state
+        showNotification(response.data.message);
         setIsPublished(true);
       } catch (error) {
         console.error('Error publishing batch:', error);
-        alert('Failed to publish batch.');
+        showNotification('Failed to publish batch.');
       }
     }
   };
 
-  // Handle Revert Changes button
   const handleRevertChanges = async () => {
-    if (confirm('Are you sure you want to revert all changes?')) {
+    if (window.confirm('Are you sure you want to revert all changes?')) {
       try {
         const response = await axios.get(
           `/api/getGraphData?projectId=${projectId}&batchId=${batchId}`
         );
         const { kgCandidateData: originalKgCandidateData } = response.data;
-
-        // Update the graph data
         setKgCandidateDataState(originalKgCandidateData);
-
-        // Re-render the network
+        nodes.current = new DataSet(originalKgCandidateData.nodes);
+        edges.current = new DataSet(originalKgCandidateData.edges);
         kgCandidateNetworkInstanceRef.current.setData(originalKgCandidateData);
-
-        // Clear selection and edit data
         setSelectedElement(null);
         setEditData({});
-        alert('Changes reverted.');
+        showNotification('Changes reverted.');
       } catch (error) {
         console.error('Error reverting changes:', error);
-        alert('Failed to revert changes.');
+        showNotification('Failed to revert changes.');
       }
     }
   };
-
 
   useEffect(() => {
     const updateState = () => {
@@ -286,26 +272,20 @@ export default function BatchPage({
         edges: edges.current.get(),
       });
     };
-  
     nodes.current.on('*', updateState);
     edges.current.on('*', updateState);
-  
     return () => {
       nodes.current.off('*', updateState);
       edges.current.off('*', updateState);
     };
   }, []);
 
-  // Handle Save button in metadata panel
-  
   const handleDragEnd = useCallback(
     (params) => {
       if (params.nodes.length > 0) {
         const nodeId = params.nodes[0];
         const positions = kgCandidateNetworkInstanceRef.current.getPositions(nodeId);
         const { x, y } = positions[nodeId];
-
-        // Update the node's position directly in the DataSet
         nodes.current.update({ id: nodeId, x, y });
       }
     },
@@ -313,132 +293,154 @@ export default function BatchPage({
   );
 
   const handleNodeEdit = (updatedNodeData) => {
-    // const positions = kgCandidateNetworkInstanceRef.current.getPositions();
-    console.log('Updated Node Data:', updatedNodeData);
-    // Update the node in the DataSet
-    const { id, label, ...rest } = updatedNodeData;
-    nodes.current.update({ id, label, ...rest });
-    // nodes.current.update(updatedNodeData);
-
-    // Update the selection
+    nodes.current.update(updatedNodeData);
     setSelectedElement({ type: 'node', data: updatedNodeData });
     setEditData(updatedNodeData);
+    showNotification('Node updated.');
   };
-
 
   const handleEdgeEdit = (updatedEdgeData) => {
-    //const positions = kgCandidateNetworkInstanceRef.current.getPositions();
-    // Update the edge in the DataSet
     edges.current.update(updatedEdgeData);
-
     setSelectedElement({ type: 'edge', data: updatedEdgeData });
-
     setEditData(updatedEdgeData);
+    showNotification('Edge updated.');
   };
 
+  const finalizeAddElement = (label) => {
+    if (!label) {
+      showNotification('No label provided. Operation cancelled.');
+      setAddElementModalOpen(false);
+      return;
+    }
+
+    if (addingElementType === 'node' && isAddNodeMode) {
+      const newNode = {
+        ...pendingElement,
+        label: label,
+      };
+      nodes.current.add(newNode);
+      showNotification('Node added.');
+      setIsAddNodeMode(false);
+      setCursorStyle('default');
+    } else if (addingElementType === 'edge' && isAddEdgeMode) {
+      const newEdge = {
+        ...pendingElement,
+        label: label,
+      };
+      edges.current.add(newEdge);
+      showNotification('Edge added.');
+      setIsAddEdgeMode(false);
+      setEdgeSourceNode(null);
+      setCursorStyle('default');
+    }
+
+    setAddElementModalOpen(false);
+    setAddingElementType(null);
+    setPendingElement(null);
+  };
 
   const handleNetworkClick = useCallback(
     (params) => {
-      console.log('handleNetworkClick called with params:', params);
-      console.log('isAddNodeMode:', isAddNodeMode);
-      console.log('isAddEdgeMode', isAddEdgeMode);
-      console.log('params.nodes.length:', params.nodes.length);
-      console.log('params.edges.length:', params.edges.length);
-
       if (isAddNodeMode && params.nodes.length === 0 && params.edges.length === 0) {
-        console.log('Adding new node...');
         const position = params.pointer.canvas;
         const newNodeId = 'node' + Date.now();
-        const nodeLabel = prompt('Enter label for the new node:', 'New Node');
-
-        if (nodeLabel === null) {
-          // User canceled the prompt
-          return;
-        }
-
         const newNode = {
           id: newNodeId,
-          label: nodeLabel || 'New Node',
+          label: '',
           x: position.x,
           y: position.y,
           fixed: { x: false, y: false },
         };
-
-        // Add the new node to the DataSet
-        nodes.current.add(newNode);
-        console.log('New node added:', newNode);
-
-        // Reset modes and cursor
-        setIsAddNodeMode(false);
-        setCursorStyle('default');
-        alert('Node added.');
+        setPendingElement(newNode);
+        setAddingElementType('node');
+        setAddElementModalOpen(true);
       } else if (isAddEdgeMode) {
         if (params.nodes.length > 0) {
           const nodeId = params.nodes[0];
           if (!edgeSourceNode) {
             setEdgeSourceNode(nodeId);
-            alert('Source node selected. Now select the target node.');
+            showNotification('Source node selected. Now select the target node.');
           } else if (edgeSourceNode === nodeId) {
-            alert('Please select a different node as the target.');
+            showNotification('Please select a different node as the target.');
           } else {
-            const edgeLabel = prompt('Enter label for the new edge:', 'New Edge');
             const newEdgeId = 'edge' + Date.now();
-
-            if (edgeLabel === null) {
-              // User canceled the prompt
-              return;
-            }
-
             const newEdge = {
               id: newEdgeId,
               from: edgeSourceNode,
               to: nodeId,
-              label: edgeLabel || '',
               arrows: 'to',
+              label: '',
             };
-
-            // Add the new edge to the DataSet
-            edges.current.add(newEdge);
-            console.log('New edge added:', newEdge);
-
-            // Reset modes and cursor
-            setIsAddEdgeMode(false);
-            setEdgeSourceNode(null);
-            setCursorStyle('default');
-            alert('Edge added.');
+            setPendingElement(newEdge);
+            setAddingElementType('edge');
+            setAddElementModalOpen(true);
           }
         } else {
-          alert('Please select a node.');
+          showNotification('Please select a node to create an edge.');
         }
       } else {
         // Selection logic
         if (params.nodes.length > 0) {
-          // Node selected
           const nodeId = params.nodes[0];
           const nodeData = nodes.current.get(nodeId);
-          console.log('Node selected:', nodeData);
           setSelectedElement({ type: 'node', data: nodeData });
           setEditData({ ...nodeData });
         } else if (params.edges.length > 0) {
-          // Edge selected
           const edgeId = params.edges[0];
           const edgeData = edges.current.get(edgeId);
-          console.log('Edge selected:', edgeData);
           setSelectedElement({ type: 'edge', data: edgeData });
           setEditData({ ...edgeData });
         } else {
-          // Clicked on empty space
           setSelectedElement(null);
           setEditData({});
         }
       }
     },
-    [isAddNodeMode, setIsAddNodeMode, isAddEdgeMode, edgeSourceNode]
+    [isAddNodeMode, isAddEdgeMode, edgeSourceNode]
   );
-  // for incoming graph
+
+  // -------------------------------
+  // NEW FEATURE: APPEND NODE
+  // -------------------------------
+  const handleAppendNode = () => {
+    if (selectedElement && selectedElement.type === 'node') {
+      const sourceNodeId = selectedElement.data.id;
+      // Get position of the selected node
+      const positions = kgCandidateNetworkInstanceRef.current.getPositions(sourceNodeId);
+      const { x, y } = positions[sourceNodeId];
+
+      // Create a new node slightly offset from the source node
+      const newNodeId = 'node' + Date.now();
+      const newNode = {
+        id: newNodeId,
+        label: 'New Node', // Default label, user can edit later
+        x: x + 50, // Offset by 50 units on x-axis
+        y: y,
+        fixed: { x: false, y: false },
+      };
+
+      // Create edge from sourceNode to newNode
+      const newEdgeId = 'edge' + Date.now();
+      const newEdge = {
+        id: newEdgeId,
+        from: sourceNodeId,
+        to: newNodeId,
+        arrows: 'to',
+        label: ''
+      };
+
+      nodes.current.add(newNode);
+      edges.current.add(newEdge);
+      showNotification(`Appended a new node to ${sourceNodeId}.`);
+    } else {
+      showNotification('Please select a node first.');
+    }
+  };
+  // -------------------------------
+
   useEffect(() => {
     const options = {
-      physics: false, // Disable physics to fix node positions
+      physics: false,
       nodes: {
         shape: 'dot',
         size: 15,
@@ -449,7 +451,8 @@ export default function BatchPage({
         },
       },
       layout: {
-        improvedLayout: false, // Disable automatic layout improvements
+        improvedLayout: false,
+        hierarchical: true
       },
       interaction: {
         navigationButtons: true,
@@ -457,27 +460,17 @@ export default function BatchPage({
       },
     };
 
-
-    // Render kgData (Current Graph)
     if (kgNetworkRef.current && kgData) {
       if (!kgNetworkInstanceRef.current) {
-        // Initialize the network
         kgNetworkInstanceRef.current = new Network(kgNetworkRef.current, kgData, options);
-
-        // Add event listeners if needed
-        // kgNetworkInstanceRef.current.on('click', handleKgNetworkClick);
       } else {
-        // Update the network data
         kgNetworkInstanceRef.current.setData(kgData);
       }
     }
   }, [kgData]);
 
-  
-  // init the network
-
-  const options = {
-    physics: false, // Disable physics to fix node positions
+  const candidateOptions = {
+    physics: false,
     nodes: {
       shape: 'dot',
       size: 15,
@@ -488,29 +481,33 @@ export default function BatchPage({
       },
     },
     layout: {
-      improvedLayout: false, // Disable automatic layout improvements
+      improvedLayout: false,
+      hierarchical: true
     },
     interaction: {
       navigationButtons: true,
       keyboard: true,
     },
   };
+
   useEffect(() => {
-    if (kgCandidateNetworkRef.current) {
+    if (kgCandidateNetworkRef.current && kgCandidateDataState) {
       if (!kgCandidateNetworkInstanceRef.current) {
         kgCandidateNetworkInstanceRef.current = new Network(
           kgCandidateNetworkRef.current,
           { nodes: nodes.current, edges: edges.current },
-          options
+          candidateOptions
         );
-
-        
+      } else {
+        kgCandidateNetworkInstanceRef.current.setData({
+          nodes: nodes.current,
+          edges: edges.current
+        });
       }
 
       kgCandidateNetworkInstanceRef.current.on('click', handleNetworkClick);
       kgCandidateNetworkInstanceRef.current.on('dragEnd', handleDragEnd);
 
-      // Update cursor style
       const container = kgCandidateNetworkInstanceRef.current.body.container;
       if (container) {
         container.style.cursor = cursorStyle;
@@ -521,21 +518,19 @@ export default function BatchPage({
         kgCandidateNetworkInstanceRef.current.off('dragEnd', handleDragEnd);
       };
     }
-  }, [handleNetworkClick, handleDragEnd, cursorStyle]);
-
-
+  }, [kgCandidateDataState, handleNetworkClick, handleDragEnd, cursorStyle]);
 
   return (
     <Layout>
       <h1 className={styles.heading}>{metadata.title || `Batch: ${batchId}`}</h1>
 
+      <Notification
+        message={notification}
+        onClose={() => setNotification('')}
+      />
 
-      {/* Display Publish Status */}
-      <p>
-        <strong>Published:</strong> {isPublished ? '✅ Yes' : '❌ No'}
-      </p>
+      <p><strong>Published:</strong> {isPublished ? '✅ Yes' : '❌ No'}</p>
 
-      {/* Buttons */}
       <div className={styles.buttonContainer}>
         <button className={styles.button} onClick={handlePublish}>
           Publish
@@ -543,10 +538,8 @@ export default function BatchPage({
         <button className={styles.button} onClick={handleRevertChanges}>
           Revert Changes
         </button>
-
       </div>
 
-      {/* Comment Text Area */}
       <h3>Comment</h3>
       <textarea
         className={styles.commentTextArea}
@@ -555,7 +548,6 @@ export default function BatchPage({
         placeholder="Enter your comments here..."
       ></textarea>
 
-      {/* Current Graph */}
       <h2>Current Graph</h2>
       <div
         ref={kgNetworkRef}
@@ -563,41 +555,32 @@ export default function BatchPage({
         style={{ marginBottom: '40px' }}
       ></div>
 
-      {/* Merge Candidate Graph Section */}
       <h2>Merge Candidate Graph</h2>
       <div className={styles.buttonContainer}>
         <button
           className={`${styles.button} ${isAddNodeMode ? styles.activeButton : ''}`}
           onClick={() => {
             const newMode = !isAddNodeMode;
-            console.log('newMode:', newMode);
             setIsAddNodeMode(newMode);
             setIsAddEdgeMode(false);
             setEdgeSourceNode(null);
             setCursorStyle(newMode ? 'crosshair' : 'default');
-
-          }
-          }
+          }}
         >
           {isAddNodeMode ? 'Cancel Add Node' : 'Add Node'}
         </button>
         <button
           className={`${styles.button} ${isAddEdgeMode ? styles.activeButton : ''}`}
           onClick={() => {
-            const newMode = !isAddEdgeMode
+            const newMode = !isAddEdgeMode;
             setIsAddEdgeMode(newMode);
-            setIsAddNodeMode(false); // Ensure only one mode is active
-            setEdgeSourceNode(null); // Reset source node selection
+            setIsAddNodeMode(false);
+            setEdgeSourceNode(null);
             setCursorStyle(newMode ? 'pointer' : 'default');
           }}
         >
           {isAddEdgeMode ? 'Cancel Add Edge' : 'Add Edge'}
         </button>
-        {
-        console.log('candidate state', kgCandidateDataState)
-        
-        }
-        {console.log('isAddNodeMode', isAddNodeMode)}
         <button
           className={styles.button}
           onClick={handleGenerateCandidateGraph}
@@ -608,6 +591,7 @@ export default function BatchPage({
       </div>
 
       <div className={styles.graphSection}>
+        <InstructionOverlay mode={isAddNodeMode ? 'addNode' : isAddEdgeMode ? 'addEdge' : null} />
         <div
           ref={kgCandidateNetworkRef}
           className={styles.graphContainer}
@@ -616,7 +600,6 @@ export default function BatchPage({
           {selectedElement ? (
             <div>
               <h3>{selectedElement.type === 'node' ? 'Node' : 'Edge'} Metadata</h3>
-              
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -635,25 +618,33 @@ export default function BatchPage({
                     onChange={(e) => setEditData({ ...editData, label: e.target.value })}
                   />
                 </label>
-                {/* Additional fields can be added here */}
                 <button type="submit">Save</button>
               </form>
+              {selectedElement.type === 'node' && (
+                <div style={{ marginTop: '10px' }}>
+                  <button onClick={handleAppendNode}>Append Node</button>
+                </div>
+              )}
             </div>
           ) : (
             <p>Select a node or edge to view and edit its metadata.</p>
           )}
         </div>
         {!kgCandidateDataState && (isGenerating ? (
-          <p>generating candidate graph...</p>
+          <p>Generating candidate graph...</p>
         ) : (
           <div>
             <p>Candidate Not Found.</p>
-
           </div>
-        ))
-
-        }
+        ))}
       </div>
+
+      <AddElementModal
+        type={addingElementType}
+        open={addElementModalOpen}
+        onClose={() => setAddElementModalOpen(false)}
+        onSubmit={finalizeAddElement}
+      />
     </Layout>
   );
 }
