@@ -548,97 +548,87 @@ export default function BatchPage({
         placeholder="Enter your comments here..."
       ></textarea>
 
-      <h2>Current Graph</h2>
-      <div
-        ref={kgNetworkRef}
-        className={styles.graphContainer}
-        style={{ marginBottom: '40px' }}
-      ></div>
+<div className={styles.gridContainer}>
+      {/* Top Row: Titles */}
+      <div className={styles.currentGraphTitle}>Current Graph</div>
+      <div className={styles.candidateGraphTitle}>Merge Candidate Graph</div>
+      {/* The third cell in top row is left blank as per requirements */}
 
-      <h2>Merge Candidate Graph</h2>
-      <div className={styles.buttonContainer}>
-        <button
-          className={`${styles.button} ${isAddNodeMode ? styles.activeButton : ''}`}
-          onClick={() => {
-            const newMode = !isAddNodeMode;
-            setIsAddNodeMode(newMode);
-            setIsAddEdgeMode(false);
-            setEdgeSourceNode(null);
-            setCursorStyle(newMode ? 'crosshair' : 'default');
-          }}
-        >
-          {isAddNodeMode ? 'Cancel Add Node' : 'Add Node'}
-        </button>
-        <button
-          className={`${styles.button} ${isAddEdgeMode ? styles.activeButton : ''}`}
-          onClick={() => {
-            const newMode = !isAddEdgeMode;
-            setIsAddEdgeMode(newMode);
-            setIsAddNodeMode(false);
-            setEdgeSourceNode(null);
-            setCursorStyle(newMode ? 'pointer' : 'default');
-          }}
-        >
-          {isAddEdgeMode ? 'Cancel Add Edge' : 'Add Edge'}
-        </button>
-        <button
-          className={styles.button}
-          onClick={handleGenerateCandidateGraph}
-          disabled={isGenerating || kgCandidateDataState}
-        >
-          Generate Candidate Graph
-        </button>
+      {/* Bottom Row: Graphs and Metadata */}
+      <div className={styles.currentGraphArea}>
+        <div ref={kgNetworkRef} className={styles.graphContainer}></div>
       </div>
 
-      <div className={styles.graphSection}>
+      <div className={styles.candidateGraphArea}>
+        
         <InstructionOverlay mode={isAddNodeMode ? 'addNode' : isAddEdgeMode ? 'addEdge' : null} />
-        <div
-          ref={kgCandidateNetworkRef}
-          className={styles.graphContainer}
-        ></div>
-        <div className={styles.metadataPanel}>
-          {selectedElement ? (
-            <div>
-              <h3>{selectedElement.type === 'node' ? 'Node' : 'Edge'} Metadata</h3>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (selectedElement.type === 'node') {
-                    handleNodeEdit(editData);
-                  } else if (selectedElement.type === 'edge') {
-                    handleEdgeEdit(editData);
-                  }
-                }}
-              >
-                <label>
-                  Label:
-                  <input
-                    type="text"
-                    value={editData.label || ''}
-                    onChange={(e) => setEditData({ ...editData, label: e.target.value })}
-                  />
-                </label>
-                <button type="submit">Save</button>
-              </form>
-              {selectedElement.type === 'node' && (
-                <div style={{ marginTop: '10px' }}>
-                  <button onClick={handleAppendNode}>Append Node</button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p>Select a node or edge to view and edit its metadata.</p>
-          )}
+        <div ref={kgCandidateNetworkRef} className={styles.graphContainer}></div>
+        <div className={styles.buttonContainer}>
+          <button
+            className={`${styles.button} ${isAddNodeMode ? styles.activeButton : ''}`}
+            onClick={() => {
+              const newMode = !isAddNodeMode;
+              setIsAddNodeMode(newMode);
+              setIsAddEdgeMode(false);
+              setEdgeSourceNode(null);
+              setCursorStyle(newMode ? 'crosshair' : 'default');
+            }}
+          >
+            {isAddNodeMode ? 'Cancel Add Node' : 'Add Node'}
+          </button>
+          <button
+            className={`${styles.button} ${isAddEdgeMode ? styles.activeButton : ''}`}
+            onClick={() => {
+              const newMode = !isAddEdgeMode;
+              setIsAddEdgeMode(newMode);
+              setIsAddNodeMode(false);
+              setEdgeSourceNode(null);
+              setCursorStyle(newMode ? 'pointer' : 'default');
+            }}
+          >
+            {isAddEdgeMode ? 'Cancel Add Edge' : 'Add Edge'}
+          </button>
+          
         </div>
-        {!kgCandidateDataState && (isGenerating ? (
-          <p>Generating candidate graph...</p>
-        ) : (
-          <div>
-            <p>Candidate Not Found.</p>
-          </div>
-        ))}
       </div>
 
+      <div className={styles.metadataPanel}>
+        {selectedElement ? (
+          <div>
+            <h3>{selectedElement.type === 'node' ? 'Node' : 'Edge'} Metadata</h3>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (selectedElement.type === 'node') {
+                  handleNodeEdit(editData);
+                } else if (selectedElement.type === 'edge') {
+                  handleEdgeEdit(editData);
+                }
+              }}
+            >
+              <label>
+                Label:
+                <input
+                  type="text"
+                  value={editData.label || ''}
+                  onChange={(e) => setEditData({ ...editData, label: e.target.value })}
+                />
+              </label>
+              <button type="submit">Save</button>
+            </form>
+            {selectedElement.type === 'node' && (
+              <div style={{ marginTop: '10px' }}>
+                <button onClick={handleAppendNode}>Append Node</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p>Select a node or edge to view and edit its metadata.</p>
+        )}
+      </div>
+    </div>
+
+      
       <AddElementModal
         type={addingElementType}
         open={addElementModalOpen}
