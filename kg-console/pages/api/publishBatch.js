@@ -36,8 +36,7 @@ export default function handler(req, res) {
       const metadata = JSON.parse(metadataContent);
 
       metadata.isPublished = true;
-
-      metadata.lastUpdate = Date().toUTCString();
+      metadata.lastUpdate = new Date().toISOString();
       metadata.commentMessage = commentMessage; // Save the comment
 
       fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
