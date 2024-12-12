@@ -11,6 +11,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Network } from 'vis-network';
 import axios from 'axios';
 import { DataSet } from 'vis-data';
+import { parse } from 'csv-parse/sync';
+import DataTable from '@/components/DataTable';
 
 function Notification({ message, onClose }) {
   if (!message) return null;
@@ -109,6 +111,16 @@ export async function getStaticProps({ params }) {
   const kgGraph = read(kgDotContent);
   const kgData = graphlibToVis(kgGraph);
 
+  // read csv as table
+  const rawBatchPath = path.join(batchDirectory, 'raw_batch.csv');
+  const rawBatchContent = fs.readFileSync(rawBatchPath, 'utf8');
+  const rawBatchRecords = parse(rawBatchContent, {
+    columns: false,
+    skip_empty_lines: true
+  });
+
+
+
   let kgCandidateData = null;
   if (fs.existsSync(kgCandidateDotPath)) {
     const kgCandidateDotContent = fs.readFileSync(kgCandidateDotPath, 'utf8');
@@ -123,6 +135,7 @@ export async function getStaticProps({ params }) {
       metadata,
       kgData,
       kgCandidateData,
+      rawBatchRecords
     },
   };
 }
@@ -133,6 +146,7 @@ export default function BatchPage({
   metadata,
   kgData,
   kgCandidateData,
+  rawBatchRecords
 }) {
   const [isPublished, setIsPublished] = useState(metadata.isPublished);
   const [commentMessage, setCommentMessage] = useState(metadata.commentMessage || '');
@@ -544,91 +558,92 @@ export default function BatchPage({
         </button>
       </div>
 
-      
 
-<div className={styles.gridContainer}>
-      {/* Top Row: Titles */}
-      <div className={styles.currentGraphTitle}>Original</div>
-      <div className={styles.candidateGraphTitle}>Edited</div>
-      {/* The third cell in top row is left blank as per requirements */}
 
-      {/* Bottom Row: Graphs and Metadata */}
-      <div className={styles.currentGraphArea}>
-        <div ref={kgNetworkRef} className={styles.graphContainer}></div>
-      </div>
+      <div className={styles.gridContainer}>
+        {/* Top Row: Titles */}
+        <div className={styles.currentGraphTitle}>Original</div>
+        <div className={styles.candidateGraphTitle}>Edited</div>
+        {/* The third cell in top row is left blank as per requirements */}
 
-      <div className={styles.candidateGraphArea}>
-        
-        <InstructionOverlay mode={isAddNodeMode ? 'addNode' : isAddEdgeMode ? 'addEdge' : null} />
-        <div ref={kgCandidateNetworkRef} className={styles.graphContainer}></div>
-        <div className={styles.buttonContainer}>
-          <button
-            className={`${styles.button} ${isAddNodeMode ? styles.activeButton : ''}`}
-            onClick={() => {
-              const newMode = !isAddNodeMode;
-              setIsAddNodeMode(newMode);
-              setIsAddEdgeMode(false);
-              setEdgeSourceNode(null);
-              setCursorStyle(newMode ? 'crosshair' : 'default');
-            }}
-          >
-            {isAddNodeMode ? 'Cancel Add Node' : 'Add Node'}
-          </button>
-          <button
-            className={`${styles.button} ${isAddEdgeMode ? styles.activeButton : ''}`}
-            onClick={() => {
-              const newMode = !isAddEdgeMode;
-              setIsAddEdgeMode(newMode);
-              setIsAddNodeMode(false);
-              setEdgeSourceNode(null);
-              setCursorStyle(newMode ? 'pointer' : 'default');
-            }}
-          >
-            {isAddEdgeMode ? 'Cancel Add Edge' : 'Add Edge'}
-          </button>
-          
+        {/* Bottom Row: Graphs and Metadata */}
+        <div className={styles.currentGraphArea}>
+          <div ref={kgNetworkRef} className={styles.graphContainer}></div>
+        </div>
+
+        <div className={styles.candidateGraphArea}>
+
+          <InstructionOverlay mode={isAddNodeMode ? 'addNode' : isAddEdgeMode ? 'addEdge' : null} />
+          <div ref={kgCandidateNetworkRef} className={styles.graphContainer}></div>
+          <div className={styles.buttonContainer}>
+            <button
+              className={`${styles.button} ${isAddNodeMode ? styles.activeButton : ''}`}
+              onClick={() => {
+                const newMode = !isAddNodeMode;
+                setIsAddNodeMode(newMode);
+                setIsAddEdgeMode(false);
+                setEdgeSourceNode(null);
+                setCursorStyle(newMode ? 'crosshair' : 'default');
+              }}
+            >
+              {isAddNodeMode ? 'Cancel Add Node' : 'Add Node'}
+            </button>
+            <button
+              className={`${styles.button} ${isAddEdgeMode ? styles.activeButton : ''}`}
+              onClick={() => {
+                const newMode = !isAddEdgeMode;
+                setIsAddEdgeMode(newMode);
+                setIsAddNodeMode(false);
+                setEdgeSourceNode(null);
+                setCursorStyle(newMode ? 'pointer' : 'default');
+              }}
+            >
+              {isAddEdgeMode ? 'Cancel Add Edge' : 'Add Edge'}
+            </button>
+
+          </div>
+        </div>
+
+        <div className={styles.metadataPanel}>
+          {selectedElement ? (
+            <div>
+              <h3>{selectedElement.type === 'node' ? 'Node' : 'Edge'} Metadata</h3>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (selectedElement.type === 'node') {
+                    handleNodeEdit(editData);
+                  } else if (selectedElement.type === 'edge') {
+                    handleEdgeEdit(editData);
+                  }
+                }}
+              >
+                <label>
+                  Label:
+                  <input
+                    type="text"
+                    value={editData.label || ''}
+                    onChange={(e) => setEditData({ ...editData, label: e.target.value })}
+                  />
+                </label>
+                <button type="submit">Save</button>
+              </form>
+              {selectedElement.type === 'node' && (
+                <div style={{ marginTop: '10px' }}>
+                  <button onClick={handleAppendNode}>Append Node</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p>Select a node or edge to view and edit its metadata.</p>
+          )}
         </div>
       </div>
 
-      <div className={styles.metadataPanel}>
-        {selectedElement ? (
-          <div>
-            <h3>{selectedElement.type === 'node' ? 'Node' : 'Edge'} Metadata</h3>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (selectedElement.type === 'node') {
-                  handleNodeEdit(editData);
-                } else if (selectedElement.type === 'edge') {
-                  handleEdgeEdit(editData);
-                }
-              }}
-            >
-              <label>
-                Label:
-                <input
-                  type="text"
-                  value={editData.label || ''}
-                  onChange={(e) => setEditData({ ...editData, label: e.target.value })}
-                />
-              </label>
-              <button type="submit">Save</button>
-            </form>
-            {selectedElement.type === 'node' && (
-              <div style={{ marginTop: '10px' }}>
-                <button onClick={handleAppendNode}>Append Node</button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p>Select a node or edge to view and edit its metadata.</p>
-        )}
+      <div>
+        <h2>Raw batch</h2>
+        <DataTable data={rawBatchRecords} />
       </div>
-    </div>
-
-    <div>
-      <h2>hello?</h2>
-    </div>  
       <AddElementModal
         type={addingElementType}
         open={addElementModalOpen}
