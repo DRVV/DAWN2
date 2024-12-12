@@ -28,7 +28,7 @@ export default function handler(req, res) {
     );
 
     const metadataPath = path.join(batchDirectory, 'metadata.json');
-    const kgPublishedDotPath = path.join(projectsDirectory, 'merged_graph.dot');
+    const kgPublishedDotPath = path.join(batchDirectory, 'kg_edited.dot');
 
     try {
       // Update isPublished status in metadata.json
@@ -68,24 +68,24 @@ export default function handler(req, res) {
       
   
       // Construct the shell command
-      const gitCommands = `
-        cd "${projectsDirectory}" && \
-        git add merged_graph.dot && \
-        cd "${batchDirectory}" && \
-        git add metadata.json '*.dot' &&\
-        git commit -m "[KG_UPDATE] ${sanitizedComment}"
-      `;
-      exec(gitCommands, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error executing git commands: ${error}`);
-          return res.status(500).json({ error: 'Failed to execute git commands.' });
-        }
-        console.log(`Git output: ${stdout}`);
-        console.error(`Git errors: ${stderr}`);
+      // const gitCommands = `
+      //   cd "${projectsDirectory}" && \
+      //   git add merged_graph.dot && \
+      //   cd "${batchDirectory}" && \
+      //   git add metadata.json '*.dot' &&\
+      //   git commit -m "[KG_UPDATE] ${sanitizedComment}"
+      // `;
+      // exec(gitCommands, (error, stdout, stderr) => {
+      //   if (error) {
+      //     console.error(`Error executing git commands: ${error}`);
+      //     return res.status(500).json({ error: 'Failed to execute git commands.' });
+      //   }
+      //   console.log(`Git output: ${stdout}`);
+      //   console.error(`Git errors: ${stderr}`);
 
-        // Respond to the client after git commands have executed
-        res.status(200).json({ message: 'Batch published, graph saved, and git commit successful.' });
-      });
+      //   // Respond to the client after git commands have executed
+      //   res.status(200).json({ message: 'Batch published, graph saved, and git commit successful.' });
+      // });
       
     } catch (error) {
       console.error('Error publishing batch:', error);

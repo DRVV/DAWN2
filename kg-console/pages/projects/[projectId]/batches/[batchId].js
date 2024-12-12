@@ -100,7 +100,7 @@ export async function getStaticProps({ params }) {
 
   const metadataPath = path.join(batchDirectory, 'metadata.json');
   const kgDotPath = path.join(batchDirectory, 'kg.dot');
-  const kgCandidateDotPath = path.join(batchDirectory, 'kg_candidate.dot');
+  const kgCandidateDotPath = path.join(batchDirectory, 'kg_edited.dot');
 
   const metadataContent = fs.readFileSync(metadataPath, 'utf8');
   const metadata = JSON.parse(metadataContent);
@@ -482,7 +482,11 @@ export default function BatchPage({
     },
     layout: {
       improvedLayout: false,
-      hierarchical: true
+      hierarchical: {
+        enabled: true,
+        sortMethod: "directed",
+        shakeTowards: "roots"
+      }
     },
     interaction: {
       navigationButtons: true,
@@ -540,18 +544,12 @@ export default function BatchPage({
         </button>
       </div>
 
-      <h3>Comment</h3>
-      <textarea
-        className={styles.commentTextArea}
-        value={commentMessage}
-        onChange={(e) => setCommentMessage(e.target.value)}
-        placeholder="Enter your comments here..."
-      ></textarea>
+      
 
 <div className={styles.gridContainer}>
       {/* Top Row: Titles */}
-      <div className={styles.currentGraphTitle}>Current Graph</div>
-      <div className={styles.candidateGraphTitle}>Merge Candidate Graph</div>
+      <div className={styles.currentGraphTitle}>Original</div>
+      <div className={styles.candidateGraphTitle}>Edited</div>
       {/* The third cell in top row is left blank as per requirements */}
 
       {/* Bottom Row: Graphs and Metadata */}
@@ -628,7 +626,9 @@ export default function BatchPage({
       </div>
     </div>
 
-      
+    <div>
+      <h2>hello?</h2>
+    </div>  
       <AddElementModal
         type={addingElementType}
         open={addElementModalOpen}
