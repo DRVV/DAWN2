@@ -452,6 +452,25 @@ export default function BatchPage({
   };
   // -------------------------------
 
+  const handleDeleteSelectedElement = () => {
+    if (!selectedElement) return;
+  
+    if (selectedElement.type === 'node') {
+      // Remove node from DataSet
+      nodes.current.remove({ id: selectedElement.data.id });
+      showNotification(`Node ${selectedElement.data.id} removed.`);
+    } else if (selectedElement.type === 'edge') {
+      // Remove edge from DataSet
+      edges.current.remove({ id: selectedElement.data.id });
+      showNotification(`Edge ${selectedElement.data.id} removed.`);
+    }
+  
+    // Clear the selection
+    setSelectedElement(null);
+    setEditData({});
+  };
+  
+
   useEffect(() => {
     const options = {
       physics: false,
@@ -633,11 +652,21 @@ export default function BatchPage({
                   <button onClick={handleAppendNode}>Append Node</button>
                 </div>
               )}
+              {/* Add a Delete Button for Both Nodes and Edges */}
+              <div style={{ marginTop: '10px' }}>
+                <button
+                  style={{ backgroundColor: '#e53935', color: '#fff', border: 'none', padding: '0.5rem', borderRadius: '4px', cursor: 'pointer' }}
+                  onClick={handleDeleteSelectedElement}
+                >
+                  Delete {selectedElement.type === 'node' ? 'Node' : 'Edge'}
+                </button>
+              </div>
             </div>
           ) : (
             <p>Select a node or edge to view and edit its metadata.</p>
           )}
         </div>
+
       </div>
 
       <div>
