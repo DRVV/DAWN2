@@ -13,6 +13,7 @@ import DataTable from '@/components/DataTable';
 
 import {
   ReactFlow,
+  addEdge,
   useNodesState,
   useEdgesState,
   Controls,
@@ -252,19 +253,39 @@ export default function BatchPage({
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedCandidateNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedCandidateEdges);
+  const onConnect = useCallback(
+    (connection) => setEdges((eds) => addEdge(connection, eds)),
+    [setEdges],
+  );
 
   const handleGenerateCandidateGraph = async () => {
     // Placeholder for actual generation logic
     console.log('Candidate graph generated (placeholder).');
   };
-
   const handlePublish = async () => {
     if (window.confirm('Are you sure you want to publish this batch?')) {
-      // Placeholder for actual publish logic
-      setIsPublished(true);
-      console.log('Batch published (placeholder).');
+      try {
+        const response = await axios.post('/api/publishBatch', {
+          projectId,
+          batchId,
+          nodes,
+          edges,
+          commentMessage
+        });
+
+        if (response.data.success) {
+          setIsPublished(true);
+          console.log('Batch published successfully.');
+        } else {
+          console.error('Error publishing batch:', response.data.error);
+        }
+      } catch (error) {
+        console.error('Error publishing batch:', error);
+      }
     }
   };
+
+
 
   const handleRevertChanges = async () => {
     if (window.confirm('Are you sure you want to revert all changes?')) {
@@ -318,6 +339,7 @@ export default function BatchPage({
               edges={edges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
               fitView
               panOnScroll
               panOnDrag

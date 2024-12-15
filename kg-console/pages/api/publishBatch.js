@@ -5,95 +5,61 @@ import path from 'path';
 import { Graph } from 'graphlib';
 import { write } from 'graphlib-dot';
 
-const { exec } = require('child_process'); // for executing git commands
-
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method === 'POST') {
-    const { projectId, batchId, kgCandidateDataState, commentMessage } = req.body;
-
-    const projectsDirectory = path.join(
-      process.cwd(),
-      'public',
-      'static',
-      'project',
-    );
-    const batchDirectory = path.join(
-      process.cwd(),
-      'public',
-      'static',
-      'project',
-      projectId,
-      'batches',
-      batchId
-    );
-
-    const metadataPath = path.join(batchDirectory, 'metadata.json');
-    const kgPublishedDotPath = path.join(batchDirectory, 'kg_edited.dot');
+    const { projectId, batchId, nodes, edges, commentMessage } = req.body;
 
     try {
-      // Update isPublished status in metadata.json
-      const metadataContent = fs.readFileSync(metadataPath, 'utf8');
-      const metadata = JSON.parse(metadataContent);
-
-      metadata.isPublished = true;
-      metadata.lastUpdate = new Date().toISOString();
-      metadata.commentMessage = commentMessage; // Save the comment
-
-      fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
-
-      // Convert kgCandidateDataState back to graphlib graph
-      const graph = new Graph({ directed: true });
+      // Create a new graphlib Graph
+      const g = new Graph({ directed: true });
+      g.setGraph({});
 
       // Add nodes
-      kgCandidateDataState.nodes.forEach((node) => {
-        graph.setNode(node.id, node);
+      nodes.forEach((node) => {
+        // node.data.label contains the node label
+        g.setNode(node.id, { label: node.data.label || '' });
       });
 
       // Add edges
-      kgCandidateDataState.edges.forEach((edge) => {
-        graph.setEdge(edge.from, edge.to, edge);
+      edges.forEach((edge) => {
+        const edgeLabel = edge.label || '';
+        g.setEdge(edge.source, edge.target, { label: edgeLabel });
       });
 
-      // Convert graphlib graph to DOT format
-      const dotContent = write(graph);
+      // Convert to DOT
+      const dotOutput = write(g);
 
-      // Write DOT content to kg_published.dot
-      fs.writeFileSync(kgPublishedDotPath, dotContent);
+      // Save DOT file
+      const batchDirectory = path.join(
+        process.cwd(),
+        'public',
+        'static',
+        'project',
+        projectId,
+        'batches',
+        batchId
+      );
 
-      // ** Execute Git Commands **
-      // Sanitize the commentMessage to prevent command injection
-      const sanitizedComment = commentMessage.replace(/"/g, '\\"');
+      const kgCandidateDotPath = path.join(batchDirectory, 'kg_edited.dot');
+      fs.writeFileSync(kgCandidateDotPath, dotOutput, 'utf8');
 
-      // Change directory to your project root where .git directory is located
-      
-      
-  
-      // Construct the shell command
-      // const gitCommands = `
-      //   cd "${projectsDirectory}" && \
-      //   git add merged_graph.dot && \
-      //   cd "${batchDirectory}" && \
-      //   git add metadata.json '*.dot' &&\
-      //   git commit -m "[KG_UPDATE] ${sanitizedComment}"
-      // `;
-      // exec(gitCommands, (error, stdout, stderr) => {
-      //   if (error) {
-      //     console.error(`Error executing git commands: ${error}`);
-      //     return res.status(500).json({ error: 'Failed to execute git commands.' });
-      //   }
-      //   console.log(`Git output: ${stdout}`);
-      //   console.error(`Git errors: ${stderr}`);
+      // Optionally update metadata if needed
+      const metadataPath = path.join(batchDirectory, 'metadata.json');
+      let metadata = {};
+      if (fs.existsSync(metadataPath)) {
+        const metadataContent = fs.readFileSync(metadataPath, 'utf8');
+        metadata = JSON.parse(metadataContent);
+      }
+      metadata.isPublished = true;
+      metadata.commentMessage = commentMessage || metadata.commentMessage;
+      fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), 'utf8');
 
-      //   // Respond to the client after git commands have executed
-      //   res.status(200).json({ message: 'Batch published, graph saved, and git commit successful.' });
-      // });
-      
+      return res.status(200).json({ success: true, message: 'Batch published and DOT file saved.' });
     } catch (error) {
       console.error('Error publishing batch:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+      return res.status(500).json({ success: false, error: 'Internal server error' });
     }
   } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).json({ success: false, error: 'Method not allowed' });
   }
 }
