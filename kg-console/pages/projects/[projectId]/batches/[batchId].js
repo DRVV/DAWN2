@@ -13,6 +13,8 @@ import axios from 'axios';
 import { DataSet } from 'vis-data';
 import { parse } from 'csv-parse/sync';
 import DataTable from '@/components/DataTable';
+import Modal from '@/components/Modal';
+import { getAllBatches } from '@/lib/getAllBatches';
 
 function Notification({ message, onClose }) {
   if (!message) return null;
@@ -33,35 +35,7 @@ function InstructionOverlay({ mode }) {
   return <div className={styles.instructionOverlay}>{instructions}</div>;
 }
 
-function AddElementModal({ type, open, onClose, onSubmit }) {
-  const [label, setLabel] = useState('');
 
-  useEffect(() => {
-    if (!open) setLabel('');
-  }, [open]);
-
-  if (!open) return null;
-
-  return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modalContent}>
-        <h3>{type === 'node' ? 'Add Node' : 'Add Edge'}</h3>
-        <label>
-          Label:
-          <input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder={`Enter label for ${type}`}
-          />
-        </label>
-        <div className={styles.modalActions}>
-          <button onClick={() => onSubmit(label)}>Add</button>
-          <button onClick={onClose}>Cancel</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export async function getStaticPaths() {
   const projectsDirectory = path.join(process.cwd(), 'public', 'static', 'project');
@@ -87,34 +61,97 @@ export async function getStaticPaths() {
   return { paths, fallback: false };
 }
 
+// // export async function getStaticProps({ params }) {
+//   const { projectId, batchId } = params;
+
+//   const batchesDirectory = path.join(
+//     process.cwd(),
+//     'public',
+//     'static',
+//     'project',
+//     projectId,
+//     'batches'
+//   );
+
+//   const batchFolders = fs.readdirSync(batchesDirectory).filter((f) =>
+//     fs.statSync(path.join(batchesDirectory, f)).isDirectory()
+//   );
+
+//   batchFolders.sort(); // Assuming batch directories are named in a sortable manner
+
+//   const currentIndex = batchFolders.indexOf(batchId);
+//   const nextBatchId = currentIndex >= 0 && currentIndex < batchFolders.length - 1
+//     ? batchFolders[currentIndex + 1]
+//     : null;
+
+//   const batchDirectory = path.join(batchesDirectory, batchId);
+//   const metadataPath = path.join(batchDirectory, 'metadata.json');
+//   const kgDotPath = path.join(batchDirectory, 'kg.dot');
+//   const kgCandidateDotPath = path.join(batchDirectory, 'kg_edited.dot');
+//   const rawBatchPath = path.join(batchDirectory, 'raw_batch.csv');
+
+//   const metadataContent = fs.readFileSync(metadataPath, 'utf8');
+//   const metadata = JSON.parse(metadataContent);
+
+//   const kgDotContent = fs.readFileSync(kgDotPath, 'utf8');
+//   const kgGraph = read(kgDotContent);
+//   const kgData = graphlibToVis(kgGraph);
+
+//   const rawBatchContent = fs.readFileSync(rawBatchPath, 'utf8');
+//   const rawBatchRecords = parse(rawBatchContent, {
+//     columns: false,
+//     skip_empty_lines: true,
+//   });
+
+//   let kgCandidateData = null;
+//   if (fs.existsSync(kgCandidateDotPath)) {
+//     const kgCandidateDotContent = fs.readFileSync(kgCandidateDotPath, 'utf8');
+//     const kgCandidateGraph = read(kgCandidateDotContent);
+//     kgCandidateData = graphlibToVis(kgCandidateGraph);
+//   }
+
+//   return {
+//     props: {
+//       projectId,
+//       batchId,
+//       metadata,
+//       kgData,
+//       kgCandidateData,
+//       rawBatchRecords,
+//       nextBatchId,
+//     },
+//   };
+// //}
+
 export async function getStaticProps({ params }) {
   const { projectId, batchId } = params;
 
-  const batchesDirectory = path.join(
+  const allBatches = getAllBatches();
+  const currentIndex = allBatches.findIndex(
+    (item) => item.projectId === projectId && item.batchId === batchId
+  );
+
+  let nextBatchId = null;
+  let nextProjectId = null;
+  if (currentIndex !== -1 && currentIndex < allBatches.length - 1) {
+    const nextBatch = allBatches[currentIndex + 1];
+    nextBatchId = nextBatch.batchId;
+    nextProjectId = nextBatch.projectId;
+  }
+
+  const batchDirectory = path.join(
     process.cwd(),
     'public',
     'static',
     'project',
     projectId,
-    'batches'
+    'batches',
+    batchId
   );
 
-  const batchFolders = fs.readdirSync(batchesDirectory).filter((f) =>
-    fs.statSync(path.join(batchesDirectory, f)).isDirectory()
-  );
-
-  batchFolders.sort(); // Assuming batch directories are named in a sortable manner
-
-  const currentIndex = batchFolders.indexOf(batchId);
-  const nextBatchId = currentIndex >= 0 && currentIndex < batchFolders.length - 1
-    ? batchFolders[currentIndex + 1]
-    : null;
-
-  const batchDirectory = path.join(batchesDirectory, batchId);
   const metadataPath = path.join(batchDirectory, 'metadata.json');
   const kgDotPath = path.join(batchDirectory, 'kg.dot');
   const kgCandidateDotPath = path.join(batchDirectory, 'kg_edited.dot');
-  const rawBatchPath = path.join(batchDirectory, 'raw_batch.csv');
 
   const metadataContent = fs.readFileSync(metadataPath, 'utf8');
   const metadata = JSON.parse(metadataContent);
@@ -123,6 +160,8 @@ export async function getStaticProps({ params }) {
   const kgGraph = read(kgDotContent);
   const kgData = graphlibToVis(kgGraph);
 
+  // read csv as table
+  const rawBatchPath = path.join(batchDirectory, 'raw_batch.csv');
   const rawBatchContent = fs.readFileSync(rawBatchPath, 'utf8');
   const rawBatchRecords = parse(rawBatchContent, {
     columns: false,
@@ -145,6 +184,7 @@ export async function getStaticProps({ params }) {
       kgCandidateData,
       rawBatchRecords,
       nextBatchId,
+      nextProjectId,
     },
   };
 }
@@ -157,8 +197,10 @@ export default function BatchPage({
   kgData,
   kgCandidateData,
   rawBatchRecords,
-  nextBatchId
+  nextBatchId,
+  nextProjectId
 }) {
+  const [label, setLabel] = useState('');
   const [isPublished, setIsPublished] = useState(metadata.isPublished);
   const [commentMessage, setCommentMessage] = useState(metadata.commentMessage || '');
 
@@ -333,9 +375,10 @@ export default function BatchPage({
 
   const finalizeAddElement = (label) => {
     if (!label) {
-      showNotification('No label provided. Operation cancelled.');
-      setAddElementModalOpen(false);
-      return;
+      // showNotification('No label provided. Operation cancelled.');
+      // setAddElementModalOpen(false);
+      // return;
+      label = ''
     }
 
     if (addingElementType === 'node' && isAddNodeMode) {
@@ -586,11 +629,11 @@ export default function BatchPage({
         <button className={styles.button} onClick={handleRevertChanges}>
           Revert Changes
         </button>
-        {nextBatchId && (
-          <Link href={`/projects/${projectId}/batches/${nextBatchId}`} passHref>
-            <button className={styles.button}>Next ➜</button>
-          </Link>
-        )}
+        {nextProjectId && nextBatchId && (
+        <Link href={`/projects/${nextProjectId}/batches/${nextBatchId}`} passHref>
+          <button className={styles.button}>Next ➜</button>
+        </Link>
+      )}
       </div>
 
 
@@ -689,12 +732,27 @@ export default function BatchPage({
         <h2>Raw batch</h2>
         <DataTable data={rawBatchRecords} />
       </div>
+
+      <Modal open={addElementModalOpen} onClose={() => setAddElementModalOpen(false)}>
+  <h3>{addingElementType === 'node' ? 'Add Node' : 'Add Edge'}</h3>
+  <label>
+    Label:
+    <input
+      value={label}
+      onChange={(e) => setLabel(e.target.value)}
+      placeholder={`Enter label for ${addingElementType}`}
+    />
+  </label>
+  <button onClick={() => finalizeAddElement(label)}>Add</button>
+  <button onClick={() => setAddElementModalOpen(false)}>Cancel</button>
+</Modal>
+{/* 
       <AddElementModal
         type={addingElementType}
         open={addElementModalOpen}
         onClose={() => setAddElementModalOpen(false)}
         onSubmit={finalizeAddElement}
-      />
+      /> */}
     </Layout>
   );
 }

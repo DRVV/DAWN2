@@ -1,5 +1,6 @@
 // pages/index.js
-import fs from 'fs';
+import { getAllBatches } from '../lib/getAllBatches';
+// import fs from 'fs';
 import path from 'path';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -7,91 +8,11 @@ import styles from '../styles/Home.module.css'; // Import the CSS module
 import Layout from '@/components/Layout';
 
 export async function getStaticProps() {
-  const projectsDirectory = path.join(process.cwd(), 'public', 'static', 'project');
-
-  // Check if the projects directory exists
-  if (!fs.existsSync(projectsDirectory)) {
-    return {
-      props: { batches: [] },
-    };
-  }
-
-  const projectFolders = fs.readdirSync(projectsDirectory);
-
-  let batches = [];
-
-  projectFolders.forEach((projectFolder) => {
-    const projectPath = path.join(projectsDirectory, projectFolder);
-    const batchesDirectory = path.join(projectPath, 'batches');
-
-    // Read project-level metadata
-    const projectMetadataPath = path.join(projectPath, 'metadata.json');
-    let projectMetadata = {};
-    if (fs.existsSync(projectMetadataPath)) {
-      try {
-        const projectMetadataContent = fs.readFileSync(projectMetadataPath, 'utf8');
-        projectMetadata = JSON.parse(projectMetadataContent);
-      } catch (error) {
-        console.error(`Error parsing ${projectMetadataPath}:`, error);
-      }
-    }
-
-    // Get last modified date of project metadata.json
-    let projectMetadataLastModified = null;
-    if (fs.existsSync(projectMetadataPath)) {
-      try {
-        const stats = fs.statSync(projectMetadataPath);
-        projectMetadataLastModified = stats.mtime;
-      } catch (error) {
-        console.error(`Error getting stats for ${projectMetadataPath}:`, error);
-      }
-    }
-
-    // Check if the batches directory exists
-    if (fs.existsSync(batchesDirectory)) {
-      const batchFolders = fs.readdirSync(batchesDirectory);
-
-      batchFolders.forEach((batchFolder) => {
-        const batchMetadataPath = path.join(batchesDirectory, batchFolder, 'metadata.json');
-        let batchMetadata = { batchId: batchFolder };
-
-        if (fs.existsSync(batchMetadataPath)) {
-          try {
-            const metadataContent = fs.readFileSync(batchMetadataPath, 'utf8');
-            batchMetadata = { ...batchMetadata, ...JSON.parse(metadataContent) };
-          } catch (error) {
-            console.error(`Error parsing ${batchMetadataPath}:`, error);
-          }
-        }
-
-        // Get originalFilename from project metadata.json
-        let originalFilename = 'N/A';
-        if (projectMetadata.originalFilename) {
-          originalFilename = projectMetadata.originalFilename;
-        }
-
-        batches.push({
-          projectId: projectFolder,
-          batchId: batchFolder,
-          batchMetadata,
-          projectMetadata: {
-            provider: projectMetadata.provider || 'N/A',
-            productName: projectMetadata.productName || 'N/A',
-            originalFilename: originalFilename,
-            projectMetadataLastModified: projectMetadataLastModified
-              ? projectMetadataLastModified.toISOString()
-              : 'N/A',
-          },
-        });
-      });
-    }
-  });
-
+  const batches = getAllBatches();
   return {
     props: { batches },
   };
-}
-
+}  
 export default function HomePage({ batches }) {
   // State for filtering
   const [filter, setFilter] = useState({
