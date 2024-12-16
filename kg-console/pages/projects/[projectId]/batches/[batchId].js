@@ -15,6 +15,7 @@ import { parse } from 'csv-parse/sync';
 import DataTable from '@/components/DataTable';
 import Modal from '@/components/Modal';
 import { getAllBatches } from '@/lib/getAllBatches';
+import { truncateProjectId } from '@/lib/formatter';
 
 function Notification({ message, onClose }) {
   if (!message) return null;
@@ -621,7 +622,7 @@ export default function BatchPage({
 
   return (
     <Layout>
-      <h1 className={styles.heading}>{metadata.title || `Batch: ${batchId}`}</h1>
+      <h1 className={styles.heading}>{metadata.title || `${truncateProjectId(projectId)} / ${batchId}`}</h1>
 
       <Notification
         message={notification}
