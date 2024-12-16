@@ -90,19 +90,31 @@ export async function getStaticPaths() {
 export async function getStaticProps({ params }) {
   const { projectId, batchId } = params;
 
-  const batchDirectory = path.join(
+  const batchesDirectory = path.join(
     process.cwd(),
     'public',
     'static',
     'project',
     projectId,
-    'batches',
-    batchId
+    'batches'
   );
 
+  const batchFolders = fs.readdirSync(batchesDirectory).filter((f) =>
+    fs.statSync(path.join(batchesDirectory, f)).isDirectory()
+  );
+
+  batchFolders.sort(); // Assuming batch directories are named in a sortable manner
+
+  const currentIndex = batchFolders.indexOf(batchId);
+  const nextBatchId = currentIndex >= 0 && currentIndex < batchFolders.length - 1
+    ? batchFolders[currentIndex + 1]
+    : null;
+
+  const batchDirectory = path.join(batchesDirectory, batchId);
   const metadataPath = path.join(batchDirectory, 'metadata.json');
   const kgDotPath = path.join(batchDirectory, 'kg.dot');
   const kgCandidateDotPath = path.join(batchDirectory, 'kg_edited.dot');
+  const rawBatchPath = path.join(batchDirectory, 'raw_batch.csv');
 
   const metadataContent = fs.readFileSync(metadataPath, 'utf8');
   const metadata = JSON.parse(metadataContent);
@@ -111,15 +123,11 @@ export async function getStaticProps({ params }) {
   const kgGraph = read(kgDotContent);
   const kgData = graphlibToVis(kgGraph);
 
-  // read csv as table
-  const rawBatchPath = path.join(batchDirectory, 'raw_batch.csv');
   const rawBatchContent = fs.readFileSync(rawBatchPath, 'utf8');
   const rawBatchRecords = parse(rawBatchContent, {
     columns: false,
-    skip_empty_lines: true
+    skip_empty_lines: true,
   });
-
-
 
   let kgCandidateData = null;
   if (fs.existsSync(kgCandidateDotPath)) {
@@ -135,10 +143,12 @@ export async function getStaticProps({ params }) {
       metadata,
       kgData,
       kgCandidateData,
-      rawBatchRecords
+      rawBatchRecords,
+      nextBatchId,
     },
   };
 }
+
 
 export default function BatchPage({
   projectId,
@@ -146,7 +156,8 @@ export default function BatchPage({
   metadata,
   kgData,
   kgCandidateData,
-  rawBatchRecords
+  rawBatchRecords,
+  nextBatchId
 }) {
   const [isPublished, setIsPublished] = useState(metadata.isPublished);
   const [commentMessage, setCommentMessage] = useState(metadata.commentMessage || '');
@@ -575,6 +586,11 @@ export default function BatchPage({
         <button className={styles.button} onClick={handleRevertChanges}>
           Revert Changes
         </button>
+        {nextBatchId && (
+          <Link href={`/projects/${projectId}/batches/${nextBatchId}`} passHref>
+            <button className={styles.button}>Next ➜</button>
+          </Link>
+        )}
       </div>
 
 
@@ -682,3 +698,5 @@ export default function BatchPage({
     </Layout>
   );
 }
+
+
