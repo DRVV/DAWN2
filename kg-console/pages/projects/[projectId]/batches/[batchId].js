@@ -10,6 +10,9 @@ import { useState, useCallback } from 'react';
 import axios from 'axios';
 import { parse } from 'csv-parse/sync';
 import DataTable from '@/components/DataTable';
+import EditableNode from '../../../../components/EditableNode';
+import EditableEdge from '../../../../components/EditableEdge';
+
 
 import {
   ReactFlow,
@@ -18,62 +21,19 @@ import {
   useEdgesState,
   Controls,
   Background,
-  Handle
+  Handle,
+  MarkerType,
+  useReactFlow,
+  ReactFlowProvider,
 } from '@xyflow/react';
+
+import KGEdge from '../../../../components/KGEdge'
+
 import '@xyflow/react/dist/style.css';
 
 import Dagre from '@dagrejs/dagre';
 
-function EditableNode({ id, data, selected }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [label, setLabel] = useState(data.label || '');
 
-  const handleDoubleClick = () => {
-    setIsEditing(true);
-  };
-
-  const handleBlur = () => {
-    setIsEditing(false);
-    data.onLabelChange(id, label);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      setIsEditing(false);
-      data.onLabelChange(id, label);
-    }
-  };
-
-  return (
-    <div
-      style={{
-        padding: '5px 10px',
-        border: '1px solid #222',
-        borderRadius: '5px',
-        background: selected ? '#f0f0f0' : '#fff',
-        minWidth: '80px',
-        textAlign: 'center'
-      }}
-      onDoubleClick={handleDoubleClick}
-    >
-      {isEditing ? (
-        <input
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          autoFocus
-        />
-      ) : (
-        <span>{label}</span>
-      )}
-      {/* Handles to allow drawing edges:
-          Drag from the right side (source handle) to another node's left side (target handle) to create an edge */}
-      <Handle type="source" position="bottom" style={{ background: '#555' }} />
-      <Handle type="target" position="top" style={{ background: '#555' }} />
-    </div>
-  );
-}
 
 export async function getStaticPaths() {
   const projectsDirectory = path.join(process.cwd(), 'public', 'static', 'project');
@@ -201,9 +161,22 @@ export default function BatchPage({
     );
   }, []);
 
+  const onEdgeLabelChange = useCallback((id, newLabel) => {
+    setEdges((eds) =>
+      eds.map((edge) =>
+        edge.id === id ? { ...edge, data: { ...edge.data, label: newLabel } } : edge
+      )
+    );
+  }, []);
+
   // Define node types
   const nodeTypes = {
     editableNode: EditableNode
+  };
+  
+  const edgeTypes = {
+    //editableEdge: EditableEdge
+    default: 'default'
   };
 
   // Convert original data
@@ -221,7 +194,8 @@ export default function BatchPage({
     source: String(e.from),
     target: String(e.to),
     label: e.label,
-    type: 'default'
+
+    // type: 'kgedge'
   }));
 
   // Layout the original graph
@@ -237,13 +211,20 @@ export default function BatchPage({
     position: { x: 0, y: 0 }, // will be layouted
     type: 'editableNode'
   }));
+
   const candidateEdgesData = kgCandidateData.edges.map((e) => ({
     id: String(e.id),
     source: String(e.from),
     target: String(e.to),
     label: e.label,
-    type: 'default'
+    //type: 'editableEdge',
+    type: 'default',
+    data: { label: e.label} ,
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+    },
   }));
+  
 
   // Layout the candidate graph
   const { nodes: layoutedCandidateNodes, edges: layoutedCandidateEdges } = getLayoutedElements(
@@ -296,6 +277,34 @@ export default function BatchPage({
     }
   };
 
+  const { screenToFlowPosition } = useReactFlow();
+  const onConnectEnd = useCallback(
+    (event, connectionState) => {
+      // when a connection is dropped on the pane it's not valid
+      if (!connectionState.isValid) {
+        // we need to remove the wrapper bounds, in order to get the correct position
+        const id = getId();
+        const { clientX, clientY } =
+          'changedTouches' in event ? event.changedTouches[0] : event;
+        const newNode = {
+          id,
+          position: screenToFlowPosition({
+            x: clientX,
+            y: clientY,
+          }),
+          data: { label: `Node ${id}` },
+          origin: [0.5, 0.0],
+        };
+ 
+        setNodes((nds) => nds.concat(newNode));
+        setEdges((eds) =>
+          eds.concat({ id, source: connectionState.fromNode.id, target: id }),
+        );
+      }
+    },
+    [screenToFlowPosition],
+  );
+
   return (
     <Layout>
       <h1 className={styles.heading}>{initialMetadata.title}</h1>
@@ -337,6 +346,7 @@ export default function BatchPage({
               nodeTypes={nodeTypes}
               nodes={nodes}
               edges={edges}
+              //edgeTypes={edgeTypes}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
@@ -344,8 +354,9 @@ export default function BatchPage({
               panOnScroll
               panOnDrag
               zoomOnPinch
-              // Allows user to create edges by dragging from the source handle of one node
-              // to the target handle of another node.
+              onConnectEnd={onConnectEnd}
+            // Allows user to create edges by dragging from the source handle of one node
+            // to the target handle of another node.
             >
               <Controls />
               <Background />
@@ -361,3 +372,4 @@ export default function BatchPage({
     </Layout>
   );
 }
+
