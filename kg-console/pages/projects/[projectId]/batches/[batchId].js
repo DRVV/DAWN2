@@ -173,6 +173,14 @@ export async function getStaticProps({ params }) {
     const kgCandidateDotContent = fs.readFileSync(kgCandidateDotPath, 'utf8');
     const kgCandidateGraph = read(kgCandidateDotContent);
     kgCandidateData = graphlibToVis(kgCandidateGraph);
+  } else {
+    // kg_candidate.dot does not exist, so copy from kg.dot
+    fs.copyFileSync(kgDotPath, kgCandidateDotPath);
+  
+    // Now read the newly created candidate file
+    const kgCandidateDotContent = fs.readFileSync(kgCandidateDotPath, 'utf8');
+    const kgCandidateGraph = read(kgCandidateDotContent);
+    kgCandidateData = graphlibToVis(kgCandidateGraph);
   }
 
   return {
