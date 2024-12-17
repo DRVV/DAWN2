@@ -458,6 +458,12 @@ export default function BatchPage({
     if (selectedElement.type === 'node') {
       // Remove node from DataSet
       nodes.current.remove({ id: selectedElement.data.id });
+      edges.current.remove(edges.current.get().filter(edge => edge.from === selectedElement.data.id || edge.to === selectedElement.data.id));
+        // Update state
+  // setKgCandidateDataState({
+  //   nodes: nodes.current.get(),
+  //   edges: edges.current.get(),
+  // });
       showNotification(`Node ${selectedElement.data.id} removed.`);
     } else if (selectedElement.type === 'edge') {
       // Remove edge from DataSet
