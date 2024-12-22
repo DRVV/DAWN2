@@ -62,67 +62,6 @@ export async function getStaticPaths() {
   return { paths, fallback: false };
 }
 
-// // export async function getStaticProps({ params }) {
-//   const { projectId, batchId } = params;
-
-//   const batchesDirectory = path.join(
-//     process.cwd(),
-//     'public',
-//     'static',
-//     'project',
-//     projectId,
-//     'batches'
-//   );
-
-//   const batchFolders = fs.readdirSync(batchesDirectory).filter((f) =>
-//     fs.statSync(path.join(batchesDirectory, f)).isDirectory()
-//   );
-
-//   batchFolders.sort(); // Assuming batch directories are named in a sortable manner
-
-//   const currentIndex = batchFolders.indexOf(batchId);
-//   const nextBatchId = currentIndex >= 0 && currentIndex < batchFolders.length - 1
-//     ? batchFolders[currentIndex + 1]
-//     : null;
-
-//   const batchDirectory = path.join(batchesDirectory, batchId);
-//   const metadataPath = path.join(batchDirectory, 'metadata.json');
-//   const kgDotPath = path.join(batchDirectory, 'kg.dot');
-//   const kgCandidateDotPath = path.join(batchDirectory, 'kg_edited.dot');
-//   const rawBatchPath = path.join(batchDirectory, 'raw_batch.csv');
-
-//   const metadataContent = fs.readFileSync(metadataPath, 'utf8');
-//   const metadata = JSON.parse(metadataContent);
-
-//   const kgDotContent = fs.readFileSync(kgDotPath, 'utf8');
-//   const kgGraph = read(kgDotContent);
-//   const kgData = graphlibToVis(kgGraph);
-
-//   const rawBatchContent = fs.readFileSync(rawBatchPath, 'utf8');
-//   const rawBatchRecords = parse(rawBatchContent, {
-//     columns: false,
-//     skip_empty_lines: true,
-//   });
-
-//   let kgCandidateData = null;
-//   if (fs.existsSync(kgCandidateDotPath)) {
-//     const kgCandidateDotContent = fs.readFileSync(kgCandidateDotPath, 'utf8');
-//     const kgCandidateGraph = read(kgCandidateDotContent);
-//     kgCandidateData = graphlibToVis(kgCandidateGraph);
-//   }
-
-//   return {
-//     props: {
-//       projectId,
-//       batchId,
-//       metadata,
-//       kgData,
-//       kgCandidateData,
-//       rawBatchRecords,
-//       nextBatchId,
-//     },
-//   };
-// //}
 
 export async function getStaticProps({ params }) {
   const { projectId, batchId } = params;
@@ -177,7 +116,7 @@ export async function getStaticProps({ params }) {
   } else {
     // kg_candidate.dot does not exist, so copy from kg.dot
     fs.copyFileSync(kgDotPath, kgCandidateDotPath);
-  
+
     // Now read the newly created candidate file
     const kgCandidateDotContent = fs.readFileSync(kgCandidateDotPath, 'utf8');
     const kgCandidateGraph = read(kgCandidateDotContent);
@@ -517,28 +456,24 @@ export default function BatchPage({
 
   const handleDeleteSelectedElement = () => {
     if (!selectedElement) return;
-  
+
     if (selectedElement.type === 'node') {
       // Remove node from DataSet
       nodes.current.remove({ id: selectedElement.data.id });
       edges.current.remove(edges.current.get().filter(edge => edge.from === selectedElement.data.id || edge.to === selectedElement.data.id));
-        // Update state
-  // setKgCandidateDataState({
-  //   nodes: nodes.current.get(),
-  //   edges: edges.current.get(),
-  // });
+
       showNotification(`Node ${selectedElement.data.id} removed.`);
     } else if (selectedElement.type === 'edge') {
       // Remove edge from DataSet
       edges.current.remove({ id: selectedElement.data.id });
       showNotification(`Edge ${selectedElement.data.id} removed.`);
     }
-  
+
     // Clear the selection
     setSelectedElement(null);
     setEditData({});
   };
-  
+
 
   useEffect(() => {
     const options = {
@@ -645,10 +580,10 @@ export default function BatchPage({
           Revert Changes
         </button>
         {nextProjectId && nextBatchId && (
-        <Link href={`/projects/${nextProjectId}/batches/${nextBatchId}`} passHref>
-          <button className={styles.button}>Next ➜</button>
-        </Link>
-      )}
+          <Link href={`/projects/${nextProjectId}/batches/${nextBatchId}`} passHref>
+            <button className={styles.button}>Next ➜</button>
+          </Link>
+        )}
       </div>
 
 
@@ -749,25 +684,18 @@ export default function BatchPage({
       </div>
 
       <Modal open={addElementModalOpen} onClose={() => setAddElementModalOpen(false)}>
-  <h3>{addingElementType === 'node' ? 'Add Node' : 'Add Edge'}</h3>
-  <label>
-    Label:
-    <input
-      value={label}
-      onChange={(e) => setLabel(e.target.value)}
-      placeholder={`Enter label for ${addingElementType}`}
-    />
-  </label>
-  <button onClick={() => finalizeAddElement(label)}>Add</button>
-  <button onClick={() => setAddElementModalOpen(false)}>Cancel</button>
-</Modal>
-{/* 
-      <AddElementModal
-        type={addingElementType}
-        open={addElementModalOpen}
-        onClose={() => setAddElementModalOpen(false)}
-        onSubmit={finalizeAddElement}
-      /> */}
+        <h3>{addingElementType === 'node' ? 'Add Node' : 'Add Edge'}</h3>
+        <label>
+          Label:
+          <input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder={`Enter label for ${addingElementType}`}
+          />
+        </label>
+        <button onClick={() => finalizeAddElement(label)}>Add</button>
+        <button onClick={() => setAddElementModalOpen(false)}>Cancel</button>
+      </Modal>
     </Layout>
   );
 }
