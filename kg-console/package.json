@@ -13,12 +13,21 @@
     "fs": "^0.0.1-security",
     "graphlib": "^2.1.8",
     "graphlib-dot": "^0.6.4",
-    "next": "14.2.13",
+    "next": "^14.2.21",
     "path": "^0.12.7",
     "react": "^18",
     "react-dom": "^18",
+    "react-force-graph": "^1.29.3",
     "simple-git": "^3.27.0",
     "vis-data": "^7.1.9",
     "vis-network": "^9.1.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "eslint": "^9.17.0",
+    "typescript": "^5.7.2"
   }
 }
