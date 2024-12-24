@@ -580,7 +580,7 @@ export default function BatchPage({
           Revert Changes
         </button>
         {nextProjectId && nextBatchId && (
-          <Link href={`/projects/${nextProjectId}/batches/${nextBatchId}`} passHref>
+          <Link href={`/projects/${nextProjectId}/batches/${nextBatchId}`}>
             <button className={styles.button}>Next ➜</button>
           </Link>
         )}
