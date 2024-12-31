@@ -49,7 +49,4 @@ def get_cosine_similarities(collection_name: str):
                 "similarity": float(similarity)
             })
 
-
-    print(word_pairs)
-
     return word_pairs

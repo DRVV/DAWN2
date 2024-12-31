@@ -1,3 +1,4 @@
+import Layout from "@/components/Layout";
 import { useEffect, useState } from "react";
 import { Network } from "vis-network";
 
@@ -72,7 +73,7 @@ const WordCloseness = () => {
             iterations: 1000, // Number of stabilization iterations
           },
         },
-        
+
         edges: {
           smooth: {
             enabled: true,
@@ -84,30 +85,32 @@ const WordCloseness = () => {
   }, [graphData]);
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Word Closeness Graph</h1>
-      <label>
-        Adjust Spring Constant Scale:
-        <input
-          type="range"
-          min="0.1"
-          max="1.0"
-          step="0.05"
-          value={springScale}
-          onChange={(e) => setSpringScale(Number(e.target.value))}
-          style={{ marginLeft: "10px" }}
+    <Layout>
+      <div style={{ padding: "20px" }}>
+        <h1>Word Closeness Graph</h1>
+        <label>
+          Adjust Spring Constant Scale:
+          <input
+            type="range"
+            min="0.1"
+            max="1.0"
+            step="0.05"
+            value={springScale}
+            onChange={(e) => setSpringScale(Number(e.target.value))}
+            style={{ marginLeft: "10px" }}
+          />
+        </label>
+        <div
+          id="network"
+          style={{
+            height: "600px",
+            width: "100%",
+            border: "1px solid black",
+            marginTop: "20px",
+          }}
         />
-      </label>
-      <div
-        id="network"
-        style={{
-          height: "600px",
-          width: "100%",
-          border: "1px solid black",
-          marginTop: "20px",
-        }}
-      />
-    </div>
+      </div>
+    </Layout>
   );
 };
 

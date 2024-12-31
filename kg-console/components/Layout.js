@@ -21,6 +21,10 @@ export default function Layout({ children }) {
         <Link href="/merged-graph"className={styles.navLink}>
           Merged Graph
         </Link>
+
+        <Link href="/word-closeness"className={styles.navLink}>
+          Event Cluster Finder
+        </Link>
         {/* Add more navigation links if needed */}
         
       </nav>
