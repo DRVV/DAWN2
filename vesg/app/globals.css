@@ -31,3 +31,16 @@ body {
   color: #777;
   font-size: 12px;
 }
+
+.node-label-textarea {
+  display: flex;
+  color: #777;
+  font-size: 10px;
+  text-align: center;
+  margin-top: 1px;
+  border: none;
+  resize: none;
+  height: 40px;
+  max-height: 40px;
+  vertical-align: middle; /* not working as expected */
+}

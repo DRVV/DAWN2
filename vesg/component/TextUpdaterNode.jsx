@@ -16,7 +16,7 @@ function TextUpdaterNode({ data, isConnectable }) {
         isConnectable={isConnectable}
       />
       <div>
-        <input id="text" name="text" onChange={onChange} className="nodrag" />
+        <textarea id="text" className="node-label-textarea noDrag" name="text" onChange={onChange}  />
       </div>
       <Handle
         type="source"
