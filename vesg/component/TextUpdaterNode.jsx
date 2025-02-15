@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { Handle, Position } from '@xyflow/react';
+import CsvTable from './CsvTable';
  
 const handleStyle = { left: 10 };
  
@@ -17,6 +18,7 @@ function TextUpdaterNode({ data, isConnectable }) {
       />
       <div>
         <textarea id="text" className="node-label-textarea noDrag" name="text" onChange={onChange}  />
+        <CsvTable csvUrl="/data.csv" delimiter="," />
       </div>
       <Handle
         type="source"
