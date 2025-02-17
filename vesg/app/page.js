@@ -12,15 +12,18 @@ import {
  
 import '@xyflow/react/dist/style.css';
 import TextUpdaterNode from '../component/TextUpdaterNode';
-const nodeTypes = { textUpdater: TextUpdaterNode };
+import StateChangeNode from '@/component/Nodes/StateChangeNode';
+import DesignTableNode from '@/component/Nodes/DesignTableNode';
+// const nodeTypes = { textUpdater: TextUpdaterNode };
+const nodeTypes = { rootTable : DesignTableNode, table: StateChangeNode}
 
 const initialNodes = [
   {
     id: '0',
     type: 'input',
-    data: { label: 'Node' },
+    data: { label: 'Node' , dataUrl: '/data.csv', candidatesUrl: '/candidates.csv' },
     position: { x: 0, y: 50 },
-    type: 'textUpdater',
+    type: 'rootTable',
   },
 ];
  
@@ -55,7 +58,7 @@ const AddNodeOnEdgeDrop = () => {
           }),
           data: { label: `Node ${id}` },
           origin: [0.5, 0.0],
-          type: 'textUpdater',
+          type: 'table',
         };
  
         setNodes((nds) => nds.concat(newNode));
