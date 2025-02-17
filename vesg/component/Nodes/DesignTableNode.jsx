@@ -9,7 +9,7 @@ function DesignTableNode ({ data, isConnectable }) {
     <div className="design-table-node">
       {/* no target handles, since this is the root */}
       <div>
-        <h2>{data.label}</h2>
+        <h2>{data.csvUrl}</h2>
         <CsvLoaderFromUrl 
           dataUrl={data.dataUrl}
           candidatesUrl={data.candidatesUrl}

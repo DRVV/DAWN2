@@ -1,16 +1,112 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { excelFiles } from './excelFiles';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
+
 // Configure the PDF worker:
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url,
 ).toString();
+
+
+// Reactflow component
+
+import {
+    Background,
+    ReactFlow,
+    useNodesState,
+    useEdgesState,
+    addEdge,
+    useReactFlow,
+    ReactFlowProvider,
+  } from '@xyflow/react';
+   
+  import '@xyflow/react/dist/style.css';
+
+  import StateChangeNode from '@/component/Nodes/StateChangeNode';
+  import DesignTableNode from '@/component/Nodes/DesignTableNode';
+  // const nodeTypes = { textUpdater: TextUpdaterNode };
+  const nodeTypes = { rootTable : DesignTableNode, table: StateChangeNode}
+  
+  const initialNodes = [
+    {
+      id: '0',
+      type: 'input',
+      data: { label: 'Node' , dataUrl: '/data.csv', candidatesUrl: '/candidates.csv' , csvUrl: '/data.csv'},
+      position: { x: 0, y: 50 },
+      type: 'rootTable',
+    },
+  ];
+   
+  let id = 1;
+  const getId = () => `${id++}`;
+  const nodeOrigin = [0.5, 0];
+   
+  const AddNodeOnEdgeDrop = ({csvUrl}) => {
+    const reactFlowWrapper = useRef(null);
+    initialNodes[0].data.csvUrl = csvUrl;
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const { screenToFlowPosition } = useReactFlow();
+    const onConnect = useCallback(
+      (params) => setEdges((eds) => addEdge(params, eds)),
+      [],
+    );
+   
+    const onConnectEnd = useCallback(
+      (event, connectionState) => {
+        // when a connection is dropped on the pane it's not valid
+        if (!connectionState.isValid) {
+          // we need to remove the wrapper bounds, in order to get the correct position
+          const id = getId();
+          const { clientX, clientY } =
+            'changedTouches' in event ? event.changedTouches[0] : event;
+          const newNode = {
+            id,
+            position: screenToFlowPosition({
+              x: clientX,
+              y: clientY,
+            }),
+            data: { label: `Node ${id}`, csvUrl: csvUrl },
+            origin: [0.5, 0.0],
+            type: 'table',
+          };
+   
+          setNodes((nds) => nds.concat(newNode));
+          setEdges((eds) =>
+            eds.concat({ id, source: connectionState.fromNode.id, target: id }),
+          );
+        }
+      },
+      [screenToFlowPosition],
+    );
+   
+    return (
+      <div className="wrapper" ref={reactFlowWrapper}>
+        <ReactFlow
+          style={{ backgroundColor: "#F7F9FB" }}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onConnectEnd={onConnectEnd}
+          fitView
+          fitViewOptions={{ padding: 2 }}
+          nodeOrigin={nodeOrigin}
+          nodeTypes={nodeTypes}
+      >
+        <Background  />
+      </ReactFlow>
+      </div>
+    );
+  };
+
 
 function SearchAndViewExcelAsPDF() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -84,7 +180,13 @@ function SearchAndViewExcelAsPDF() {
           {searchResults
             .filter((file) => file.id === activeTab)
             .map((file) => (
-              <PDFViewer key={file.id} pdfUrl={file.pdfUrl} />
+                <div key={file.id}>
+              <PDFViewer pdfUrl={file.pdfUrl} />
+              {/* Graph editor */}
+             <ReactFlowProvider>
+                <AddNodeOnEdgeDrop csvUrl={file.csvUrl}/>
+            </ReactFlowProvider>
+            </div>
             ))}
         </div>
       )}
@@ -92,6 +194,8 @@ function SearchAndViewExcelAsPDF() {
       {searchResults.length === 0 && (
         <p style={{ fontStyle: 'italic', color: '#666' }}>No files found.</p>
       )}
+
+      
     </div>
   );
 }
