@@ -18,6 +18,12 @@ export const excelFiles = [
       name: '日本語も行けるか？',
       pdfUrl: '/pdfs/予約情報登録完了 ｜ インターネット予約 ｜ 商船三井さんふらわあ.pdf',
       csvUrl: '/pdfs/予約情報登録完了 ｜ インターネット予約 ｜ 商船三井さんふらわあ.csv',
+    }, 
+    {
+      id: 4,
+      name: 'test',
+      excelUrl: '/excelfiles/ブック_テスト.xlsx',
+      csvUrl: '/csvs/moeny-creation-in-the-modern-economy.csv',
     }
     
   ];

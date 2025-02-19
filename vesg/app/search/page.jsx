@@ -5,7 +5,7 @@ import { excelFiles } from './excelFiles';
 
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-
+import ExcelHtmlViewer from '@/component/ExcelHtmlViewer';
 
 // Configure the PDF worker:
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -17,95 +17,189 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 // Reactflow component
 
 import {
-    Background,
-    ReactFlow,
-    useNodesState,
-    useEdgesState,
-    addEdge,
-    useReactFlow,
-    ReactFlowProvider,
-  } from '@xyflow/react';
-   
-  import '@xyflow/react/dist/style.css';
+  Background,
+  ReactFlow,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  useReactFlow,
+  ReactFlowProvider,
+} from '@xyflow/react';
 
-  import StateChangeNode from '@/component/Nodes/StateChangeNode';
-  import DesignTableNode from '@/component/Nodes/DesignTableNode';
-  // const nodeTypes = { textUpdater: TextUpdaterNode };
-  const nodeTypes = { rootTable : DesignTableNode, table: StateChangeNode}
-  
-  const initialNodes = [
-    {
-      id: '0',
-      type: 'input',
-      data: { label: 'Node' , dataUrl: '/data.csv', candidatesUrl: '/candidates.csv' , csvUrl: '/data.csv'},
-      position: { x: 0, y: 50 },
-      type: 'rootTable',
+import '@xyflow/react/dist/style.css';
+
+import StateChangeNode from '@/component/Nodes/StateChangeNode';
+import DesignTableNode from '@/component/Nodes/DesignTableNode';
+// const nodeTypes = { textUpdater: TextUpdaterNode };
+const nodeTypes = { rootTable: DesignTableNode, table: StateChangeNode }
+
+const initialNodes = [
+  {
+    id: '0',
+    type: 'input',
+    data: { label: 'Node', dataUrl: '/data.csv', candidatesUrl: '/candidates.csv', csvUrl: '/data.csv' },
+    position: { x: 0, y: 50 },
+    type: 'rootTable',
+  },
+];
+
+let id = 1;
+const getId = () => `${id++}`;
+const nodeOrigin = [0.5, 0];
+
+const AddNodeOnEdgeDrop = ({ csvUrl }) => {
+  const reactFlowWrapper = useRef(null);
+  initialNodes[0].data.csvUrl = csvUrl;
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const { screenToFlowPosition } = useReactFlow();
+  const onConnect = useCallback(
+    (params) => setEdges((eds) => addEdge(params, eds)),
+    [],
+  );
+
+  const onConnectEnd = useCallback(
+    (event, connectionState) => {
+      // when a connection is dropped on the pane it's not valid
+      if (!connectionState.isValid) {
+        // we need to remove the wrapper bounds, in order to get the correct position
+        const id = getId();
+        const { clientX, clientY } =
+          'changedTouches' in event ? event.changedTouches[0] : event;
+        const newNode = {
+          id,
+          position: screenToFlowPosition({
+            x: clientX,
+            y: clientY,
+          }),
+          data: { label: `Node ${id}`, csvUrl: csvUrl },
+          origin: [0.5, 0.0],
+          type: 'table',
+        };
+
+        setNodes((nds) => nds.concat(newNode));
+        setEdges((eds) =>
+          eds.concat({ id, source: connectionState.fromNode.id, target: id }),
+        );
+      }
     },
-  ];
-   
-  let id = 1;
-  const getId = () => `${id++}`;
-  const nodeOrigin = [0.5, 0];
-   
-  const AddNodeOnEdgeDrop = ({csvUrl}) => {
-    const reactFlowWrapper = useRef(null);
-    initialNodes[0].data.csvUrl = csvUrl;
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    const { screenToFlowPosition } = useReactFlow();
-    const onConnect = useCallback(
-      (params) => setEdges((eds) => addEdge(params, eds)),
-      [],
-    );
-   
-    const onConnectEnd = useCallback(
-      (event, connectionState) => {
-        // when a connection is dropped on the pane it's not valid
-        if (!connectionState.isValid) {
-          // we need to remove the wrapper bounds, in order to get the correct position
-          const id = getId();
-          const { clientX, clientY } =
-            'changedTouches' in event ? event.changedTouches[0] : event;
-          const newNode = {
-            id,
-            position: screenToFlowPosition({
-              x: clientX,
-              y: clientY,
-            }),
-            data: { label: `Node ${id}`, csvUrl: csvUrl },
-            origin: [0.5, 0.0],
-            type: 'table',
-          };
-   
-          setNodes((nds) => nds.concat(newNode));
-          setEdges((eds) =>
-            eds.concat({ id, source: connectionState.fromNode.id, target: id }),
-          );
-        }
-      },
-      [screenToFlowPosition],
-    );
-   
-    return (
-      <div className="wrapper" ref={reactFlowWrapper}>
-        <ReactFlow
-          style={{ backgroundColor: "#F7F9FB" }}
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onConnectEnd={onConnectEnd}
-          fitView
-          fitViewOptions={{ padding: 2 }}
-          nodeOrigin={nodeOrigin}
-          nodeTypes={nodeTypes}
+    [screenToFlowPosition],
+  );
+
+  return (
+    <div className="wrapper" ref={reactFlowWrapper}>
+      <ReactFlow
+        style={{ backgroundColor: "#F7F9FB" }}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onConnectEnd={onConnectEnd}
+        fitView
+        fitViewOptions={{ padding: 2 }}
+        nodeOrigin={nodeOrigin}
+        nodeTypes={nodeTypes}
       >
-        <Background  />
+        <Background />
       </ReactFlow>
-      </div>
-    );
+    </div>
+  );
+};
+
+
+function SearchAndViewExcelAsHtml() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [activeTab, setActiveTab] = useState(null);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
+
+  // Simplistic search on the file name
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+
+    const lowerTerm = searchTerm.toLowerCase();
+    const matched = excelFiles.filter((file) =>
+      file.name.toLowerCase().includes(lowerTerm)
+    );
+
+    setSearchResults(matched);
+    // automatically select the first result as active tab
+    setActiveTab(matched.length > 0 ? matched[0].id : null);
+  };
+
+  const handleTabClick = (fileId) => {
+    setActiveTab(fileId);
+  };
+
+  return (
+    <div style={{ padding: '1rem', maxWidth: '800px', margin: 'auto' }}>
+      <h2>Search for Excel Files</h2>
+
+      {/* Search Form */}
+      <form onSubmit={handleSearchSubmit} style={{ marginBottom: '1rem' }}>
+        <input
+          type="text"
+          placeholder="Enter search text..."
+          value={searchTerm}
+          onChange={handleSearchChange}
+          style={{ width: '300px', marginRight: '0.5rem' }}
+        />
+        <button type="submit">Search</button>
+      </form>
+
+      {/* Tabs */}
+      {searchResults.length > 0 && (
+        <div style={{ marginBottom: '1rem' }}>
+          {searchResults.map((file) => (
+            <button
+              key={file.id}
+              onClick={() => handleTabClick(file.id)}
+              style={{
+                marginRight: '0.5rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: file.id === activeTab ? '#ccc' : 'white',
+                border: '1px solid #999',
+                cursor: 'pointer',
+              }}
+            >
+              {file.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Show the ExcelHtmlViewer for the active tab/file */}
+      {searchResults.length > 0 && activeTab && (
+        <div style={{ border: '1px solid #ccc', padding: '1rem' }}>
+          {searchResults
+            .filter((file) => file.id === activeTab)
+            .map((file) => (
+              <div key={file.id}>
+                <ExcelHtmlViewer  excelUrl={file.excelUrl} />
+                <ReactFlowProvider>
+                  <AddNodeOnEdgeDrop csvUrl={file.csvUrl} />
+                </ReactFlowProvider>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {searchResults.length === 0 && (
+        <p style={{ fontStyle: 'italic', color: '#666' }}>No files found.</p>
+      )}
+
+
+      
+    </div>
+  );
+}
+
+export default SearchAndViewExcelAsHtml;
+
 
 
 function SearchAndViewExcelAsPDF() {
@@ -180,13 +274,13 @@ function SearchAndViewExcelAsPDF() {
           {searchResults
             .filter((file) => file.id === activeTab)
             .map((file) => (
-                <div key={file.id}>
-              <PDFViewer pdfUrl={file.pdfUrl} />
-              {/* Graph editor */}
-             <ReactFlowProvider>
-                <AddNodeOnEdgeDrop csvUrl={file.csvUrl}/>
-            </ReactFlowProvider>
-            </div>
+              <div key={file.id}>
+                <PDFViewer pdfUrl={file.pdfUrl} />
+                {/* Graph editor */}
+                <ReactFlowProvider>
+                  <AddNodeOnEdgeDrop csvUrl={file.csvUrl} />
+                </ReactFlowProvider>
+              </div>
             ))}
         </div>
       )}
@@ -195,7 +289,7 @@ function SearchAndViewExcelAsPDF() {
         <p style={{ fontStyle: 'italic', color: '#666' }}>No files found.</p>
       )}
 
-      
+
     </div>
   );
 }
@@ -236,4 +330,4 @@ function PDFViewer({ pdfUrl }) {
   );
 }
 
-export default SearchAndViewExcelAsPDF;
+
