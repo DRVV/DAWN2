@@ -1,23 +1,41 @@
+'use client'; 
+// 'use client' ensures this component can run client-side logic (like React Flow) in Next.js App Router.
+
 import { useState } from 'react';
+import { Background, ReactFlow, ReactFlowProvider, useNodesState, useEdgesState } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import EventNode from '@/component/Nodes/EventNode';
+
+const nodeTypes = { eventNode: EventNode };
 
 export default function SearchArea() {
   const [searchText, setSearchText] = useState('');
   const [filteredCandidates, setFilteredCandidates] = useState([]);
-  const [tabs, setTabs] = useState([]); // Array of tab objects: { title, content }
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  
+  // We'll store tab data in state. Each tab has a title and graph data: nodes & edges.
+  const [tabs, setTabs] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
 
-  // Fixed candidate list for demonstration purposes
+  // A simple list of candidates to demonstrate the search suggestions
   const candidateList = [
-    "Candidate 1",
-    "Candidate 2",
-    "Candidate 3",
-    "Test Candidate",
-    "Another Candidate"
+    'Candidate 1',
+    'Candidate 2',
+    'Candidate 3',
+    'Test Candidate',
+    'Another Candidate'
   ];
 
+  /* -------------
+     Handlers 
+  ------------- */
+
+  // When the user types in the search box, filter the candidate list
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchText(value);
+
     if (value.trim() === '') {
       setFilteredCandidates([]);
     } else {
@@ -28,150 +46,166 @@ export default function SearchArea() {
     }
   };
 
+  // Trigger search when pressing "Enter"
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       triggerSearch();
     }
   };
 
-  const triggerSearch = () => {
-    // Simulate search by creating placeholder tabs.
-    setTabs([
-      { title: "Tab 1", content: "Placeholder content for Tab 1" },
-      { title: "Tab 2", content: "Placeholder content for Tab 2" },
-      { title: "Tab 3", content: "Placeholder content for Tab 3" },
-      { title: "Tab 4", content: "Placeholder content for Tab 4" }
-    ]);
-    setActiveTab(0);
-  };
-
+  // When a candidate is clicked, fill the input and clear suggestions
   const handleCandidateClick = (candidate) => {
     setSearchText(candidate);
     setFilteredCandidates([]);
   };
 
+  // The main search function that sets up example tab data (including graph data)
+  const triggerSearch = () => {
+    // Create example nodes & edges for each tab. In your real app, you’d load these from a server or compute them dynamically.
+
+    // TAB 1
+    const nodesTab1 = [
+      { id: '1', position: { x: 0, y: 50 }, data: { label: 'Node A', process:'P a', parts: 'Parts A' }, type: 'eventNode' },
+      { id: '2', position: { x: 150, y: 50 }, data: { label: 'Node B' }, type: 'eventNode'},
+      { id: '3', position: { x: 300, y: 50 }, data: { label: 'Node C' }, type: 'eventNode' }
+    ];
+    const edgesTab1 = [
+      { id: 'e1-2', source: '1', target: '2', label: 'A->B' },
+      { id: 'e2-3', source: '2', target: '3', label: 'B->C' }
+    ];
+
+    // TAB 2
+    const nodesTab2 = [
+      { id: 'n1', position: { x: 50, y: 0 }, data: { label: 'Start' } },
+      { id: 'n2', position: { x: 50, y: 100 }, data: { label: 'Middle' } },
+      { id: 'n3', position: { x: 50, y: 200 }, data: { label: 'End' } }
+    ];
+    const edgesTab2 = [
+      { id: 'n1-n2', source: 'n1', target: 'n2', label: 'Start->Middle' },
+      { id: 'n2-n3', source: 'n2', target: 'n3', label: 'Middle->End' }
+    ];
+
+    // TAB 3
+    const nodesTab3 = [
+      { id: 'A', position: { x: 0, y: 0 }, data: { label: 'Alpha' } },
+      { id: 'B', position: { x: 100, y: 100 }, data: { label: 'Beta' } },
+      { id: 'C', position: { x: 200, y: 0 }, data: { label: 'Gamma' } }
+    ];
+    const edgesTab3 = [
+      { id: 'A-B', source: 'A', target: 'B', label: 'Alpha->Beta' },
+      { id: 'B-C', source: 'B', target: 'C', label: 'Beta->Gamma' }
+    ];
+
+    // Update the tabs with the new graph data
+    setTabs([
+      { title: 'Tab 1', nodes: nodesTab1, edges: edgesTab1 },
+      { title: 'Tab 2', nodes: nodesTab2, edges: edgesTab2 },
+      { title: 'Tab 3', nodes: nodesTab3, edges: edgesTab3 }
+    ]);
+
+    // Switch to the first tab by default
+    setActiveTab(0);
+
+    setNodes(nodesTab1);
+    setEdges(edgesTab1);
+  };
+
+  /* -------------
+     Rendering
+  ------------- */
+
   return (
-    <div className="search-area">
-      <div className="search-input">
+    <div>
+      {/* Search input with button */}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         <input
           type="text"
           placeholder="Search..."
           value={searchText}
           onChange={handleSearchChange}
           onKeyDown={handleKeyDown}
+          style={{ flex: 1, padding: '8px' }}
         />
-        <button onClick={triggerSearch}>Search</button>
+        <button
+          onClick={triggerSearch}
+          style={{ marginLeft: '10px', padding: '8px 16px' }}
+        >
+          Search
+        </button>
       </div>
 
+      {/* Candidate suggestions dropdown */}
       {filteredCandidates.length > 0 && (
-        <ul className="suggestions">
+        <ul
+          style={{
+            border: '1px solid #ccc',
+            listStyle: 'none',
+            padding: '5px',
+            marginTop: '5px'
+          }}
+        >
           {filteredCandidates.map(candidate => (
-            <li key={candidate} onClick={() => handleCandidateClick(candidate)}>
+            <li
+              key={candidate}
+              style={{ padding: '5px', cursor: 'pointer' }}
+              onClick={() => handleCandidateClick(candidate)}
+            >
               {candidate}
             </li>
           ))}
         </ul>
       )}
 
+      {/* Search results as tabs with React Flow */}
       {tabs.length > 0 && (
-        <div className="tabs-container">
-          <div className="tabs-header">
+        <div style={{ marginTop: '20px' }}>
+          <h3>Search Results</h3>
+
+          {/* Tab headers */}
+          <div style={{
+            display: 'flex',
+            borderBottom: '1px solid #ccc',
+            marginBottom: '0px'
+          }}>
             {tabs.map((tab, index) => (
               <div
                 key={index}
-                className={`tab-header ${activeTab === index ? 'active' : ''}`}
-                onClick={() => setActiveTab(index)}
+                onClick={() => {setActiveTab(index); setNodes(tab.nodes); setEdges(tab.edges);}}
+                style={{
+                  padding: '10px 20px',
+                  cursor: 'pointer',
+                  borderBottom: activeTab === index ? '2px solid blue' : 'none'
+                }}
               >
                 {tab.title}
               </div>
             ))}
           </div>
-          <div className="tab-content">
-            {tabs[activeTab].content}
+
+          {/* Active tab content: React Flow Graph */}
+          <div
+            style={{
+              width: '100%',
+              height: '600px',
+              border: '1px solid #ccc',
+              borderTop: 'none'
+            }}
+          >
+            <ReactFlowProvider>
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                nodeTypes={nodeTypes}          
+                fitView
+              >
+                <Background />
+              </ReactFlow>
+            </ReactFlowProvider>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .search-area {
-          background: #f9f9f9;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .search-input {
-          display: flex;
-          align-items: center;
-        }
-        input {
-          flex: 1;
-          padding: 10px;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          font-size: 1rem;
-        }
-        button {
-          margin-left: 10px;
-          padding: 10px 20px;
-          border: none;
-          background-color: #0070f3;
-          color: white;
-          font-size: 1rem;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: background-color 0.2s ease;
-        }
-        button:hover {
-          background-color: #005bb5;
-        }
-        .suggestions {
-          margin-top: 10px;
-          background: white;
-          border: 1px solid #ccc;
-          border-radius: 4px;
-          list-style: none;
-          padding: 0;
-          max-height: 150px;
-          overflow-y: auto;
-        }
-        .suggestions li {
-          padding: 10px;
-          cursor: pointer;
-          transition: background 0.2s ease;
-        }
-        .suggestions li:hover {
-          background: #f0f0f0;
-        }
-        .tabs-container {
-          margin-top: 20px;
-          background: white;
-          border: 1px solid #e0e0e0;
-          border-radius: 4px;
-        }
-        .tabs-header {
-          display: flex;
-          border-bottom: 1px solid #e0e0e0;
-        }
-        .tab-header {
-          flex: 1;
-          padding: 10px;
-          text-align: center;
-          cursor: pointer;
-          transition: background-color 0.2s ease;
-        }
-        .tab-header:hover {
-          background-color: #f5f5f5;
-        }
-        .tab-header.active {
-          border-bottom: 2px solid #0070f3;
-          font-weight: bold;
-          background: #fff;
-        }
-        .tab-content {
-          padding: 20px;
-          font-size: 0.95rem;
-        }
-      `}</style>
     </div>
   );
 }
