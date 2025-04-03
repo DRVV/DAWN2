@@ -1,8 +1,5 @@
 "use client"
 
-
-
-
 import './page.css';
 
 
@@ -34,6 +31,7 @@ const selector = (state: RFState) => ({
   onNodesChange: state.onNodesChange,
   onEdgesChange: state.onEdgesChange,
   addChildNode: state.addChildNode,
+  onConnect: state.onConnect,
 });
 
 // this makes the node origin to be in the center of a node
@@ -46,11 +44,12 @@ const nodeTypes = {
 };
 import { ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import DebugLogger from './DebugLogger';
 
 
 function FlowInternal() {
   // whenever you use multiple values, you should use shallow for making sure that the component only re-renders when one of the values change
-  const { nodes, edges, onNodesChange, onEdgesChange, addChildNode } = useStore(
+  const { nodes, edges, onNodesChange, onEdgesChange, addChildNode, onConnect } = useStore(
     selector,
     shallow,
   );
@@ -96,12 +95,14 @@ function FlowInternal() {
     };
   };
 
+
   const onConnectStart: OnConnectStart = useCallback((_, { nodeId }) => {
     connectingNodeId.current = nodeId;
   }, []);
 
   const onConnectEnd: OnConnectEnd = useCallback(
-    (event) => {
+    (event, connectionState) => {
+      if (!connectionState.isValid) {
       const { nodeLookup } = store.getState();
       const targetIsPane = (event.target as Element).classList.contains(
         'react-flow__pane',
@@ -115,12 +116,18 @@ function FlowInternal() {
           addChildNode(parentNode, childNodePosition);
         }
       }
-    },
+      console.log(targetIsPane);
+    } else{
+      console.log('is valid');
+    }
+  
+  }
+    ,
     [getChildNodePosition],
   );
 
   return (
-
+      <>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -130,6 +137,7 @@ function FlowInternal() {
         nodeTypes={nodeTypes}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
+        onConnect={onConnect}
         // defaultEdgeOptions={defaultEdgeOptions}
         // connectionLineStyle={connectionLineStyle}
         //onnectionLineType={ConnectionLineType.Straight}
@@ -137,8 +145,11 @@ function FlowInternal() {
       >
         <Controls showInteractive={false} />
         <Panel position="top-left">React Flow Mind Map</Panel>
-      </ReactFlow>
 
+      </ReactFlow>
+      <DebugLogger />
+      </>
+      
   );
 }
 
