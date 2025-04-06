@@ -13,6 +13,7 @@ import {
 } from '@xyflow/react';
 import { create } from 'zustand';
 import { nanoid } from 'nanoid/non-secure';
+import { type NodeData } from '../../component/Nodes/EditableNode';
 
 export type RFState = {
   nodes: Node[];
@@ -21,7 +22,7 @@ export type RFState = {
   onEdgesChange: OnEdgesChange;
   addChildNode: (parentNode: Node, position: XYPosition) => void;
   onConnect: OnConnect;
-  updateNodeLabel: (nodeId: string, label: string) => void;
+  updateNodeLabel: (nodeId: string, newData: Partial<NodeData>) => void;
 };
 
 const useStore = create<RFState>((set, get) => ({
@@ -72,7 +73,7 @@ const useStore = create<RFState>((set, get) => ({
     });
   },
 
-  updateNodeLabel: (nodeId: string, label: string) => {
+  updateNodeLabel: (nodeId: string, newData: Partial<NodeData>) => {
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
@@ -81,7 +82,7 @@ const useStore = create<RFState>((set, get) => ({
             ...node,
             data: {
               ...node.data,
-              label,
+              ...newData,
             },
           };
         }
