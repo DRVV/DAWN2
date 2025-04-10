@@ -8,6 +8,10 @@ const fixedFloatValues = {
   voltage: [5, 12, 24]
 };
 
+import GenericDropdown from './GenericDropdown';
+import {parts} from '@/data/dropdown/parts';
+import { processes } from '@/data/dropdown/processes';
+
 // Fixed options for string inputs
 const fixedStringValues = {
   parts: ['Part A', 'Part B', 'Part C'],
@@ -29,9 +33,31 @@ export default function Sidebar() {
     setInputs(prev => ({ ...prev, [name]: value }));
   };
 
+  
+  const [selectedPart, setSelectedPart] = useState(parts[0]);
+  const [selectedProcess, setSelectedProcess] = useState(parts[0]);
+
+
   return (
+    
     <aside>
       <h3>Parameters</h3>
+      <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '15px'}}>
+      {/* <div style={{ display: 'flex', flex-direction: 'column' }}> */}
+        <GenericDropdown options={parts}
+        selected={selectedPart}
+        onChange={setSelectedPart}
+        placeholder="Select a part"
+        label="部位"
+      />
+      <GenericDropdown options={processes}
+        selected={selectedProcess}
+        onChange={setSelectedProcess}
+        placeholder="Select a process"
+        label="工程"
+      />
+      </div>
+      {/* </div> */}
       <section className="group">
         <h4>Numeric Values</h4>
         {Object.entries(fixedFloatValues).map(([key, options]) => (
@@ -103,5 +129,6 @@ export default function Sidebar() {
         }
       `}</style>
     </aside>
+
   );
 }
