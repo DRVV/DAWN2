@@ -7,6 +7,7 @@ import '@xyflow/react/dist/style.css';
 import EventNode from '@/component/Nodes/EventNode';
 import { useSearchParams } from 'next/navigation';
 import { useSearchStore } from '@/store/searchStore';
+import axios from 'axios';
 
 const nodeTypes = { eventNode: EventNode };
 
