@@ -62,59 +62,51 @@ export default function SearchArea() {
   };
 
   // The main search function that sets up example tab data (including graph data)
-  const triggerSearch = () => {
+  const triggerSearch = async() => {
     // Create example nodes & edges for each tab. In your real app, you’d load these from a server or compute them dynamically.
+    try {
+      const res = await axios.post('/api/search', {
+        part: selectedPart,
+        process: selectedProcess
+      });
+  
+      const tabData = res.data;
+  
+      console.log('DEBUG: chosen selectedPart and Process:');
+      console.log(selectedPart, selectedProcess);
+  
+      setTabs(tabData);
+      setActiveTab(0);
+      setNodes(tabData[0].nodes);
+      setEdges(tabData[0].edges);
+    } catch (error) {
+      console.error('Failed to fetch search result:', error);
+    }
+  
+    // const tabData = await res.json();
 
-    // TAB 1
-    const nodesTab1 = [
-      { id: '1', position: { x: 0, y: 50 }, data: { label: 'Node A', process:'P a', parts: 'Parts A' }, type: 'eventNode' },
-      { id: '2', position: { x: 150, y: 50 }, data: { label: 'Node B' }, type: 'eventNode'},
-      { id: '3', position: { x: 300, y: 50 }, data: { label: 'Node C' }, type: 'eventNode' }
-    ];
-    const edgesTab1 = [
-      { id: 'e1-2', source: '1', target: '2', label: 'A->B' },
-      { id: 'e2-3', source: '2', target: '3', label: 'B->C' }
-    ];
 
-    // TAB 2
-    const nodesTab2 = [
-      { id: 'n1', position: { x: 50, y: 0 }, data: { label: 'Start' } },
-      { id: 'n2', position: { x: 50, y: 100 }, data: { label: 'Middle' } },
-      { id: 'n3', position: { x: 50, y: 200 }, data: { label: 'End' } }
-    ];
-    const edgesTab2 = [
-      { id: 'n1-n2', source: 'n1', target: 'n2', label: 'Start->Middle' },
-      { id: 'n2-n3', source: 'n2', target: 'n3', label: 'Middle->End' }
-    ];
+    
 
-    // TAB 3
-    const nodesTab3 = [
-      { id: 'A', position: { x: 0, y: 0 }, data: { label: 'Alpha' } },
-      { id: 'B', position: { x: 100, y: 100 }, data: { label: 'Beta' } },
-      { id: 'C', position: { x: 200, y: 0 }, data: { label: 'Gamma' } }
-    ];
-    const edgesTab3 = [
-      { id: 'A-B', source: 'A', target: 'B', label: 'Alpha->Beta' },
-      { id: 'B-C', source: 'B', target: 'C', label: 'Beta->Gamma' }
-    ];
+    // console.log('DEBUG: chosen selectedPart and Processes:');
+    // console.log(selectedPart, selectedProcess);
 
-    console.log('DEBUG: chosen selectedPart and Processes:');
-    console.log(selectedPart, selectedProcess);
+    // // Update the tabs with the new graph data
+    // // setTabs([
+    // //   { title: 'Tab 1', nodes: nodesTab1, edges: edgesTab1 },
+    // //   { title: 'Tab 2', nodes: nodesTab2, edges: edgesTab2 },
+    // //   { title: 'Tab 3', nodes: nodesTab3, edges: edgesTab3 }
+    // // ]);
 
-    // Update the tabs with the new graph data
-    setTabs([
-      { title: 'Tab 1', nodes: nodesTab1, edges: edgesTab1 },
-      { title: 'Tab 2', nodes: nodesTab2, edges: edgesTab2 },
-      { title: 'Tab 3', nodes: nodesTab3, edges: edgesTab3 }
-    ]);
+    // setTabs(tabData)
 
 
 
-    // Switch to the first tab by default
-    setActiveTab(0);
+    // // Switch to the first tab by default
+    // setActiveTab(0);
 
-    setNodes(nodesTab1);
-    setEdges(edgesTab1);
+    // setNodes(tabData[0].nodes);
+    // setEdges(tabData[0].edges);
   };
 
   /* -------------
