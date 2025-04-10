@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { Background, ReactFlow, ReactFlowProvider, useNodesState, useEdgesState } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import EventNode from '@/component/Nodes/EventNode';
+import { useSearchParams } from 'next/navigation';
+import { useSearchStore } from '@/store/searchStore';
 
 const nodeTypes = { eventNode: EventNode };
 
@@ -96,6 +98,9 @@ export default function SearchArea() {
       { id: 'B-C', source: 'B', target: 'C', label: 'Beta->Gamma' }
     ];
 
+    console.log('DEBUG: chosen selectedPart and Processes:');
+    console.log(selectedPart, selectedProcess);
+
     // Update the tabs with the new graph data
     setTabs([
       { title: 'Tab 1', nodes: nodesTab1, edges: edgesTab1 },
@@ -103,12 +108,21 @@ export default function SearchArea() {
       { title: 'Tab 3', nodes: nodesTab3, edges: edgesTab3 }
     ]);
 
+
+
     // Switch to the first tab by default
     setActiveTab(0);
 
     setNodes(nodesTab1);
     setEdges(edgesTab1);
   };
+
+  /* -------------
+  search bar state
+  ------------- */
+  const selectedPart = useSearchStore(state => state.selectedPart);
+  const selectedProcess = useSearchStore(state => state.selectedProcess);
+
 
   /* -------------
      Rendering

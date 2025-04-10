@@ -11,6 +11,7 @@ const fixedFloatValues = {
 import GenericDropdown from './GenericDropdown';
 import {parts} from '@/data/dropdown/parts';
 import { processes } from '@/data/dropdown/processes';
+import { useSearchStore } from '@/store/searchStore';
 
 // Fixed options for string inputs
 const fixedStringValues = {
@@ -34,8 +35,12 @@ export default function Sidebar() {
   };
 
   
-  const [selectedPart, setSelectedPart] = useState(parts[0]);
-  const [selectedProcess, setSelectedProcess] = useState(parts[0]);
+  // const [selectedPart, setSelectedPart] = useState(parts[0]);
+  // const [selectedProcess, setSelectedProcess] = useState(parts[0]);
+
+  const {
+    selectedPart, setSelectedPart, selectedProcess, setSelectedProcess
+  } = useSearchStore();
 
 
   return (
