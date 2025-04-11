@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^1.1.4",
     "@xyflow/react": "^12.4.1",
     "axios": "^1.8.4",
     "next": "15.1.5",

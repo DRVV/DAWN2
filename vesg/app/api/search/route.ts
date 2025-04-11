@@ -23,13 +23,15 @@ export async function POST(req: Request) {
     {
       title: 'Tab 2',
       nodes: [
-        { id: 'n1', position: { x: 50, y: 0 }, data: { label: 'Start' } },
-        { id: 'n2', position: { x: 50, y: 100 }, data: { label: 'Middle' } },
-        { id: 'n3', position: { x: 50, y: 200 }, data: { label: 'End' } }
+        { id: 'n1', data: { label: 'Start' } },
+        { id: 'n2', data: { label: 'Middle' } },
+        { id: 'n3', data: { label: 'End' } },
+        { id: 'n4', data: { label: 'End2' } }
       ],
       edges: [
         { id: 'n1-n2', source: 'n1', target: 'n2', label: 'Start->Middle' },
-        { id: 'n2-n3', source: 'n2', target: 'n3', label: 'Middle->End' }
+        { id: 'n2-n3', source: 'n2', target: 'n3', label: 'Middle->End' },
+        { id: 'n2-n4', source: 'n2', target: 'n4', }
       ]
     },
     {
