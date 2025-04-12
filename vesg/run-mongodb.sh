@@ -1,0 +1,1 @@
+docker run --name mongodb -e MONGO_INITDB_ROOT_USERNAME=xxxx -e MONGO_INITDB_ROOT_PASSWORD=xxxx -p 27017:27017 -d mongodb/mongodb-community-server:latest 
